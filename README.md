@@ -7,11 +7,14 @@ A premium, human-centric Human Resource Management System designed for the Odoo 
 - **Dashboard Engine**: Custom analytics panels rendering data visualizations through lightweight ApexCharts.
 - **Attendance Integration**: Automated check-in/check-out logs, real-time presence tracking, and auto-calculated work duration metrics.
 - **Dynamic Leave Management**: Leave request routing with multi-level approval stages. Automatically calculates date spans and deducts balances from employee records upon approval.
-- **Payroll Processing**: Automated payslip generator with transactional calculation logic. Deducts unpaid leave or absent days directly from base wages.
+- **Payroll Processing**: Automated payslip generator with transactional calculation logic. Deducts unpaid leave or absent days directly from base wages (holiday salary cuts).
 - **Enterprise Onboarding**: System generated Login IDs and unique, random temporary passwords.
 - **Demo Utility Panel**: Built-in credential helper sheet displaying newly onboarded accounts and active user lists to streamline hackathon presentations.
 
 ## Interface Demos
+
+### Tutorial Walkthrough Video
+A full video tutorial guide showing login workflows, theme switching, onboarding, leave approvals, and payroll calculations is included in the project deliverables.
 
 ### System Interactions & Tour
 A recorded session showing credentials lookup, logins, navigation states, check-in flows, and data updates across panels.
