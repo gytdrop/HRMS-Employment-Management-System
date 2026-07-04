@@ -1,0 +1,174 @@
+<%- include('../layouts/header') %>
+
+<div style="margin-bottom: 2rem;">
+  <h1>Payroll Management</h1>
+  <% if (user.role === 'admin') { %>
+    <p>Configure employee salary structures and generate monthly pay stubs</p>
+  <% } else { %>
+    <p>View your configured salary structure and view/print your monthly payslips</p>
+  <% } %>
+</div>
+
+<% if (error) { %>
+  <div style="background-color: #fbebeb; color: var(--danger); border: 1px solid #f6d1d1; border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
+    <span class="material-symbols-outlined" style="margin-right: 8px; font-size: 20px;">error</span>
+    <%= error %>
+  </div>
+<% } %>
+
+<% if (success) { %>
+  <div style="background-color: #eaf2eb; color: var(--accent); border: 1px solid #d2e4d5; border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
+    <span class="material-symbols-outlined" style="margin-right: 8px; font-size: 20px;">check_circle</span>
+    <%= success %>
+  </div>
+<% } %>
+
+<% if (user.role === 'admin') { %>
+  <!-- ADMIN VIEW -->
+  <div class="card">
+    <h3 style="margin-bottom: 1.25rem;">Employee Salary Configurations & Operations</h3>
+    
+    <% if (structures && structures.length > 0) { %>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Base Wage</th>
+              <th>Basic Salary (50%)</th>
+              <th>HRA (25%)</th>
+              <th>Other Allowances</th>
+              <th>Update Structure</th>
+              <th>Generate Payslip</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% structures.forEach(struct => { %>
+              <tr>
+                <td>
+                  <strong><%= struct.first_name %> <%= struct.last_name %></strong>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);"><code><%= struct.login_id %></code></div>
+                </td>
+                
+                <form action="/payroll/update-structure" method="POST">
+                  <input type="hidden" name="employeeId" value="<%= struct.employee_id %>" />
+                  <td>
+                    <div style="display: flex; align-items: center;">
+                      <span style="margin-right: 4px; font-weight: 500;">$</span>
+                      <input type="number" name="baseWageInput" class="form-input" style="padding: 0.35rem 0.5rem; width: 100px; font-size: 0.9rem;" value="<%= struct.base_wage %>" step="0.01" required />
+                    </div>
+                  </td>
+                  <td>$<%= parseFloat(struct.basic_salary).toFixed(2) %></td>
+                  <td>$<%= parseFloat(struct.hra).toFixed(2) %></td>
+                  <td>
+                    <div style="display: flex; align-items: center;">
+                      <span style="margin-right: 4px; font-weight: 500;">$</span>
+                      <input type="number" name="otherAllowancesInput" class="form-input" style="padding: 0.35rem 0.5rem; width: 90px; font-size: 0.9rem;" value="<%= struct.other_allowances %>" step="0.01" required />
+                    </div>
+                  </td>
+                  <td>
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                      Save
+                    </button>
+                  </td>
+                </form>
+
+                <td>
+                  <form action="/payroll/generate-payslip" method="POST" style="display: flex; gap: 6px; align-items: center;">
+                    <input type="hidden" name="employeeId" value="<%= struct.employee_id %>" />
+                    <!-- Current / Selected Period (e.g. 2026-07) -->
+                    <input type="month" name="payPeriod" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.85rem; width: 130px;" value="<%= new Date().toISOString().substring(0, 7) %>" required />
+                    <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background-color: var(--accent);">
+                      Generate
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p style="text-align: center; color: var(--text-light); padding: 2rem 0;">No employees registered to configure.</p>
+    <% } %>
+  </div>
+
+<% } else { %>
+  <!-- EMPLOYEE VIEW -->
+  <div style="display: grid; grid-template-columns: 340px 1fr; gap: 2rem; align-items: start;">
+    <!-- My Salary Structure Details -->
+    <div class="card">
+      <h3 style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 6px;">
+        <span class="material-symbols-outlined" style="color: var(--primary);">account_balance_wallet</span>
+        Salary Components
+      </h3>
+      
+      <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: var(--text-secondary); font-weight: 500;">Defined Base Wage</span>
+        <strong style="font-size: 1.25rem; color: var(--primary);">$<%= parseFloat(structure.base_wage).toFixed(2) %></strong>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">Basic Salary (50%)</span>
+          <span style="font-weight: 500;">$<%= parseFloat(structure.basic_salary).toFixed(2) %></span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">House Rent Allowance (25%)</span>
+          <span style="font-weight: 500;">$<%= parseFloat(structure.hra).toFixed(2) %></span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">Other Allowances</span>
+          <span style="font-weight: 500;">$<%= parseFloat(structure.other_allowances).toFixed(2) %></span>
+        </div>
+      </div>
+      
+      <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: var(--text-primary); font-weight: 600;">Net Salary Components Sum</span>
+        <strong style="color: var(--accent);">$<%= (parseFloat(structure.basic_salary) + parseFloat(structure.hra) + parseFloat(structure.other_allowances)).toFixed(2) %></strong>
+      </div>
+    </div>
+
+    <!-- My Payslips List -->
+    <div class="card">
+      <h3 style="margin-bottom: 1.25rem;">My Monthly Payslips</h3>
+      
+      <% if (payslips && payslips.length > 0) { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Pay Period</th>
+                <th>Base Wage</th>
+                <th>Allowances Sum</th>
+                <th>Net Paid</th>
+                <th>Issued At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% payslips.forEach(ps => { %>
+                <tr>
+                  <td><strong><%= ps.pay_period %></strong></td>
+                  <td>$<%= parseFloat(ps.base_wage).toFixed(2) %></td>
+                  <td>$<%= (parseFloat(ps.basic_salary) + parseFloat(ps.hra) + parseFloat(ps.other_allowances) - parseFloat(ps.base_wage)).toFixed(2) %></td>
+                  <td><strong style="color: var(--accent);">$<%= parseFloat(ps.net_salary).toFixed(2) %></strong></td>
+                  <td style="font-size: 0.85rem; color: var(--text-light);"><%= new Date(ps.created_at).toLocaleDateString() %></td>
+                  <td>
+                    <a href="/payroll/payslip/<%= ps.id %>" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                      <span class="material-symbols-outlined" style="font-size: 16px;">receipt</span> View
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p style="text-align: center; color: var(--text-light); padding: 3rem 0;">No payslips generated for you yet.</p>
+      <% } %>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../layouts/footer') %>
