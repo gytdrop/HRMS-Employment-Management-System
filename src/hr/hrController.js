@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const HrModel = require('./hrModel');
+const db = require('../../database/connection');
 const { sendOnboardingEmail } = require('../utils/mailer');
 require('dotenv').config();
 
@@ -93,6 +94,17 @@ module.exports = {
 
       // Send welcome email with credentials
       const emailResult = await sendOnboardingEmail(email, firstName, loginId, randomPassword);
+
+      // ── Store credentials in inbox for login-page demo panel ──
+      try {
+        await db.query(
+          `INSERT INTO credential_inbox (employee_name, login_id, temp_password, email)
+           VALUES ($1, $2, $3, $4)`,
+          [`${firstName} ${lastName}`, loginId, randomPassword, email]
+        );
+      } catch (inboxErr) {
+        console.warn('⚠️  Could not write to credential_inbox:', inboxErr.message);
+      }
 
       const emailNote = emailResult.sent
         ? `A welcome email with login credentials has been sent to <strong>${email}</strong>.`

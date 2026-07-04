@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const AuthModel = require('./authModel');
+const db = require('../../database/connection');
 
 module.exports = {
   // Render login view
@@ -91,5 +92,33 @@ module.exports = {
       if (err) console.error(err);
       res.redirect('/auth/login');
     });
+  },
+
+  // ── Demo Credential Inbox (login page panel) ─────────────────
+  // Returns all credentials ordered newest first
+  getInbox: async (req, res) => {
+    try {
+      const result = await db.query(
+        `SELECT id, employee_name, login_id, temp_password, email, is_read,
+                to_char(created_at, 'DD Mon YYYY, HH12:MI AM') AS created_label
+         FROM credential_inbox
+         ORDER BY created_at DESC
+         LIMIT 20`
+      );
+      res.json({ success: true, items: result.rows });
+    } catch (err) {
+      console.error(err);
+      res.json({ success: false, items: [] });
+    }
+  },
+
+  // Mark all inbox entries as read
+  markInboxRead: async (req, res) => {
+    try {
+      await db.query(`UPDATE credential_inbox SET is_read = TRUE WHERE is_read = FALSE`);
+      res.json({ success: true });
+    } catch (err) {
+      res.json({ success: false });
+    }
   }
 };

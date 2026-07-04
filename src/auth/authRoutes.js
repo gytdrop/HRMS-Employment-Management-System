@@ -10,4 +10,8 @@ router.post('/reset-password', authController.handleResetPassword);
 
 router.get('/logout', authController.handleLogout);
 
+// ── Credential inbox (demo panel on login page) ──────────────
+router.get('/inbox', authController.getInbox);
+router.post('/inbox/read', authController.markInboxRead);
+
 module.exports = router;
