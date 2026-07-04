@@ -141,6 +141,7 @@
                 <th>Pay Period</th>
                 <th>Base Wage</th>
                 <th>Allowances Sum</th>
+                <th>Deductions</th>
                 <th>Net Paid</th>
                 <th>Issued At</th>
                 <th>Action</th>
@@ -152,6 +153,7 @@
                   <td><strong><%= ps.pay_period %></strong></td>
                   <td>$<%= parseFloat(ps.base_wage).toFixed(2) %></td>
                   <td>$<%= (parseFloat(ps.basic_salary) + parseFloat(ps.hra) + parseFloat(ps.other_allowances) - parseFloat(ps.base_wage)).toFixed(2) %></td>
+                  <td style="color: var(--danger); font-weight: 500;">-$<%= parseFloat(ps.deductions || 0).toFixed(2) %></td>
                   <td><strong style="color: var(--accent);">$<%= parseFloat(ps.net_salary).toFixed(2) %></strong></td>
                   <td style="font-size: 0.85rem; color: var(--text-light);"><%= new Date(ps.created_at).toLocaleDateString() %></td>
                   <td>

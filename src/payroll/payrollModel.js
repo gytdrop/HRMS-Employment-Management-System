@@ -62,12 +62,12 @@ module.exports = {
   },
 
   // Generate a new payslip
-  createPayslip: async ({ employeeId, payPeriod, baseWage, basicSalary, hra, otherAllowances, netSalary }) => {
+  createPayslip: async ({ employeeId, payPeriod, baseWage, basicSalary, hra, otherAllowances, deductions, netSalary }) => {
     const query = `
-      INSERT INTO payslips (employee_id, pay_period, base_wage, basic_salary, hra, other_allowances, net_salary)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO payslips (employee_id, pay_period, base_wage, basic_salary, hra, other_allowances, deductions, net_salary)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (employee_id, pay_period) DO UPDATE 
-      SET base_wage = $3, basic_salary = $4, hra = $5, other_allowances = $6, net_salary = $7
+      SET base_wage = $3, basic_salary = $4, hra = $5, other_allowances = $6, deductions = $7, net_salary = $8
       RETURNING *
     `;
     const res = await db.query(query, [
@@ -77,8 +77,39 @@ module.exports = {
       basicSalary,
       hra,
       otherAllowances,
+      deductions,
       netSalary
     ]);
     return res.rows[0];
+  },
+
+  // Count approved unpaid leave days overlapping the pay period
+  getUnpaidLeaveDaysCount: async (employeeId, startDate, endDate) => {
+    const query = `
+      SELECT COALESCE(SUM(
+        LEAST(end_date, $2::date) - GREATEST(start_date, $1::date) + 1
+      ), 0) AS unpaid_days
+      FROM leaves
+      WHERE employee_id = $3
+        AND status = 'Approved'
+        AND leave_type = 'Unpaid'
+        AND start_date <= $2::date
+        AND end_date >= $1::date
+    `;
+    const res = await db.query(query, [startDate, endDate, employeeId]);
+    return parseInt(res.rows[0].unpaid_days, 10);
+  },
+
+  // Count absent days in the pay period
+  getAbsentDaysCount: async (employeeId, startDate, endDate) => {
+    const query = `
+      SELECT COALESCE(COUNT(*), 0) AS absent_days
+      FROM attendance
+      WHERE employee_id = $3
+        AND status = 'absent'
+        AND work_date BETWEEN $1::date AND $2::date
+    `;
+    const res = await db.query(query, [startDate, endDate, employeeId]);
+    return parseInt(res.rows[0].absent_days, 10);
   }
 };

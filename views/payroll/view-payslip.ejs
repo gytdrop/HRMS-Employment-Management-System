@@ -66,6 +66,13 @@
           <td style="text-align: right; color: var(--text-secondary);">Custom approved allowance</td>
           <td style="text-align: right; font-weight: 500;">$<%= parseFloat(payslip.other_allowances).toFixed(2) %></td>
         </tr>
+        <% if (parseFloat(payslip.deductions) > 0) { %>
+          <tr>
+            <td style="color: var(--danger);"><strong>Deductions (Unpaid Leaves / Absences)</strong></td>
+            <td style="text-align: right; color: var(--text-secondary);">Pro-rated unpaid day cuts</td>
+            <td style="text-align: right; font-weight: 500; color: var(--danger);">-$<%= parseFloat(payslip.deductions).toFixed(2) %></td>
+          </tr>
+        <% } %>
         <tr style="border-top: 1px solid var(--border-color); font-weight: 600; font-size: 1.05rem;">
           <td>Total Net Earnings Sum</td>
           <td style="text-align: right; color: var(--text-light); font-weight: 400;">Sum of components</td>

@@ -72,6 +72,7 @@ CREATE TABLE payslips (
     basic_salary NUMERIC(10, 2) NOT NULL,
     hra NUMERIC(10, 2) NOT NULL,
     other_allowances NUMERIC(10, 2) NOT NULL,
+    deductions NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     net_salary NUMERIC(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_employee_period UNIQUE (employee_id, pay_period)
