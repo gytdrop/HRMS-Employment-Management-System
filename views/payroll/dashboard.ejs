@@ -456,6 +456,7 @@
             <tr>
               <th style="padding:0.85rem 1.25rem; border-bottom:1px solid var(--border-color); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); background:var(--bg-secondary);">Period</th>
               <th style="padding:0.85rem 1.25rem; border-bottom:1px solid var(--border-color); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); background:var(--bg-secondary);">Base Wage</th>
+              <th style="padding:0.85rem 1.25rem; border-bottom:1px solid var(--border-color); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); background:var(--bg-secondary);">Deductions</th>
               <th style="padding:0.85rem 1.25rem; border-bottom:1px solid var(--border-color); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); background:var(--bg-secondary);">Net Paid</th>
               <th style="padding:0.85rem 1.25rem; border-bottom:1px solid var(--border-color); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); background:var(--bg-secondary);">Issued</th>
               <th style="padding:0.85rem 1.25rem; border-bottom:1px solid var(--border-color); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); background:var(--bg-secondary);">Action</th>
@@ -468,6 +469,9 @@
                 <span class="period-badge"><%= ps.pay_period %></span>
               </td>
               <td style="padding:0.9rem 1.25rem; border-bottom:1px solid var(--border-color); color:var(--text-secondary);">₹<%= parseFloat(ps.base_wage).toLocaleString('en-IN',{minimumFractionDigits:2}) %></td>
+              <td style="padding:0.9rem 1.25rem; border-bottom:1px solid var(--border-color); color:var(--danger); font-weight:500;">
+                -₹<%= parseFloat(ps.deductions || 0).toLocaleString('en-IN',{minimumFractionDigits:2}) %>
+              </td>
               <td style="padding:0.9rem 1.25rem; border-bottom:1px solid var(--border-color);">
                 <span class="payslip-row-net">₹<%= parseFloat(ps.net_salary).toLocaleString('en-IN',{minimumFractionDigits:2}) %></span>
               </td>
@@ -485,91 +489,12 @@
         </table>
       </div>
     <% } else { %>
-      <p style="text-align: center; color: var(--text-light); padding: 2rem 0;">No employees registered to configure.</p>
+      <div class="empty-state">
+        <span class="material-symbols-outlined">receipt_long</span>
+        <p>No payslips generated yet.</p>
+      </div>
     <% } %>
-  </div>
-
-<% } else { %>
-  <!-- EMPLOYEE VIEW -->
-  <div style="display: grid; grid-template-columns: 340px 1fr; gap: 2rem; align-items: start;">
-    <!-- My Salary Structure Details -->
-    <div class="card">
-      <h3 style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 6px;">
-        <span class="material-symbols-outlined" style="color: var(--primary);">account_balance_wallet</span>
-        Salary Components
-      </h3>
-      
-      <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: var(--text-secondary); font-weight: 500;">Defined Base Wage</span>
-        <strong style="font-size: 1.25rem; color: var(--primary);">₹<%= parseFloat(structure.base_wage).toFixed(2) %></strong>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary); font-size: 0.9rem;">Basic Salary (50%)</span>
-          <span style="font-weight: 500;">₹<%= parseFloat(structure.basic_salary).toFixed(2) %></span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary); font-size: 0.9rem;">House Rent Allowance (25%)</span>
-          <span style="font-weight: 500;">₹<%= parseFloat(structure.hra).toFixed(2) %></span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary); font-size: 0.9rem;">Other Allowances</span>
-          <span style="font-weight: 500;">₹<%= parseFloat(structure.other_allowances).toFixed(2) %></span>
-        </div>
-      </div>
-      
-      <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: var(--text-primary); font-weight: 600;">Net Salary Components Sum</span>
-        <strong style="color: var(--accent);">₹<%= (parseFloat(structure.basic_salary) + parseFloat(structure.hra) + parseFloat(structure.other_allowances)).toFixed(2) %></strong>
-      </div>
     </div>
-
-    <!-- My Payslips List -->
-    <div class="card">
-      <h3 style="margin-bottom: 1.25rem;">My Monthly Payslips</h3>
-      
-      <% if (payslips && payslips.length > 0) { %>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Pay Period</th>
-                <th>Base Wage</th>
-                <th>Allowances Sum</th>
-                <th>Deductions</th>
-                <th>Net Paid</th>
-                <th>Issued At</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% payslips.forEach(ps => { %>
-                <tr>
-                  <td><strong><%= ps.pay_period %></strong></td>
-                  <td>₹<%= parseFloat(ps.base_wage).toFixed(2) %></td>
-                  <td>₹<%= (parseFloat(ps.basic_salary) + parseFloat(ps.hra) + parseFloat(ps.other_allowances) - parseFloat(ps.base_wage)).toFixed(2) %></td>
-                  <td style="color: var(--danger); font-weight: 500;">-₹<%= parseFloat(ps.deductions || 0).toFixed(2) %></td>
-                  <td><strong style="color: var(--accent);">₹<%= parseFloat(ps.net_salary).toFixed(2) %></strong></td>
-                  <td style="font-size: 0.85rem; color: var(--text-light);"><%= new Date(ps.created_at).toLocaleDateString('en-IN') %></td>
-                  <td>
-                    <a href="/payroll/payslip/<%= ps.id %>" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
-                      <span class="material-symbols-outlined" style="font-size: 16px;">receipt</span> View
-                    </a>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-      <% } else { %>
-        <div class="empty-state">
-          <span class="material-symbols-outlined">receipt_long</span>
-          <p>No payslips generated yet.</p>
-        </div>
-      <% } %>
-    </div>
-
   </div>
 <% } %>
 
