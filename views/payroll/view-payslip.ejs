@@ -1,111 +1,289 @@
 <%- include('../layouts/header') %>
 
-<div style="margin-bottom: 2rem;" class="no-print">
-  <a href="/payroll/dashboard" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 4px; padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-bottom: 1rem;">
-    <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span> Back to Payroll
+<style>
+  .slip-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .slip-actions .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+    background: var(--bg-secondary); border: 1px solid var(--border-color);
+    color: var(--text-primary); text-decoration: none; font-weight: 500;
+    font-size: 0.88rem; transition: background 0.18s;
+  }
+  .slip-actions .back-btn:hover { background: #e6dfd3; }
+  .slip-actions .print-btn {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 0.55rem 1.25rem; border-radius: var(--radius-sm);
+    background: var(--primary); color: white; border: none;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    transition: background 0.18s, transform 0.1s;
+  }
+  .slip-actions .print-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+  /* ─── Payslip Document ─────────────────────────────────── */
+  .payslip-doc {
+    max-width: 860px;
+    margin: 0 auto;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+  }
+
+  /* Header band */
+  .ps-header-band {
+    background: linear-gradient(135deg, var(--primary) 0%, #8d3718 100%);
+    padding: 2.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    color: white;
+  }
+  .ps-company-name {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .ps-company-sub {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+  }
+  .ps-slip-badge {
+    text-align: right;
+  }
+  .ps-slip-badge .ps-badge-label {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.75; margin-bottom: 4px;
+  }
+  .ps-slip-badge .ps-badge-title {
+    font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1;
+  }
+  .ps-slip-badge .ps-period-tag {
+    display: inline-block; margin-top: 6px;
+    background: rgba(255,255,255,0.2); border-radius: 20px;
+    padding: 0.2rem 0.75rem; font-size: 0.8rem; font-weight: 600;
+  }
+
+  /* Meta section */
+  .ps-meta {
+    padding: 2rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
+  }
+  .ps-meta-block .ps-meta-heading {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-light); margin-bottom: 0.65rem;
+  }
+  .ps-meta-block .ps-emp-name {
+    font-size: 1.2rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--text-primary);
+  }
+  .ps-meta-block .ps-meta-row {
+    font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.15rem;
+  }
+  .ps-meta-block .ps-meta-row code { font-size: 0.82rem; color: var(--primary); }
+  .ps-meta-block-right { text-align: right; }
+  .ps-status-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #eaf2eb; color: var(--accent);
+    border: 1px solid #d2e4d5; border-radius: 20px;
+    padding: 0.25rem 0.85rem; font-size: 0.78rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px;
+  }
+  .ps-status-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+  /* Earnings table */
+  .ps-table-section { padding: 2rem 3rem; }
+  .ps-table-section .ps-section-title {
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-light); margin-bottom: 1rem;
+  }
+  .ps-earn-table { width: 100%; border-collapse: collapse; }
+  .ps-earn-table th {
+    padding: 0.75rem 1rem; background: var(--bg-secondary);
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-secondary); font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+  }
+  .ps-earn-table td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+  .ps-earn-table tr:last-child td { border-bottom: none; }
+  .ps-earn-table .col-right { text-align: right; }
+  .ps-earn-table .col-center { text-align: center; }
+  .ps-comp-name { font-weight: 600; color: var(--text-primary); }
+  .ps-comp-rule { font-size: 0.78rem; color: var(--text-light); margin-top: 2px; }
+  .ps-pct-badge {
+    display: inline-block;
+    background: var(--bg-secondary); border-radius: 20px;
+    padding: 0.15rem 0.6rem; font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;
+  }
+  .ps-amount { font-weight: 600; font-size: 1rem; }
+
+  /* Net total row */
+  .ps-total-row { background: linear-gradient(135deg, #f5e7e1, #f9ede8); }
+  .ps-total-row td { border-bottom: none !important; }
+  .ps-total-label { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+  .ps-total-amount { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+
+  /* Footer note */
+  .ps-footer-note {
+    padding: 1.5rem 3rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-primary);
+  }
+  .ps-footer-note .ps-note-text {
+    font-size: 0.78rem; color: var(--text-light); font-style: italic; max-width: 380px;
+  }
+  .ps-sig-block {
+    text-align: center; width: 180px;
+  }
+  .ps-sig-line {
+    border-top: 1px solid var(--border-color); padding-top: 0.4rem;
+    font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);
+  }
+  .ps-ref-number {
+    font-size: 0.72rem; color: var(--text-light); letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 0.5rem;
+  }
+
+  /* Print overrides */
+  @media print {
+    body { background: white !important; }
+    .sidebar, .slip-actions { display: none !important; }
+    .main-content { padding: 0 !important; }
+    .payslip-doc {
+      max-width: 100% !important;
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+  }
+</style>
+
+<!-- ── Action bar ───────────────────────────────────────── -->
+<div class="slip-actions no-print">
+  <a href="/payroll/dashboard" class="back-btn">
+    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+    Back to Payroll
   </a>
-  <button onclick="window.print()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; float: right;">
+  <button onclick="window.print()" class="print-btn">
     <span class="material-symbols-outlined">print</span> Print Payslip
   </button>
-  <h1>Monthly Payslip</h1>
-  <p>Official statement of earnings for period <%= payslip.pay_period %></p>
 </div>
 
-<div class="card" id="payslip-print-area" style="max-width: 800px; margin: 0 auto; padding: 3rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: white; box-shadow: var(--shadow-md);">
-  <!-- Payslip Header -->
-  <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary); padding-bottom: 1.5rem; margin-bottom: 2rem;">
+<!-- ── Payslip Document ──────────────────────────────────── -->
+<div class="payslip-doc" id="payslip-print-area">
+
+  <!-- Header Band -->
+  <div class="ps-header-band">
     <div>
-      <h1 style="color: var(--primary); font-size: 2.25rem; font-weight: 700; margin-bottom: 0.25rem; letter-spacing: -1px;">HRMS Solutions</h1>
-      <span style="font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px;">Corporate Headquarters</span>
+      <div class="ps-company-name">HRMS Solutions</div>
+      <div class="ps-company-sub">Official Salary Statement</div>
     </div>
-    <div style="text-align: right;">
-      <h2 style="font-weight: 600; margin-bottom: 0.25rem; font-size: 1.25rem;">PAY SLIP</h2>
-      <span style="font-size: 0.9rem; color: var(--text-secondary);">Period: <strong><%= payslip.pay_period %></strong></span>
+    <div class="ps-slip-badge">
+      <div class="ps-badge-label">Document Type</div>
+      <div class="ps-badge-title">PAY SLIP</div>
+      <div class="ps-period-tag">📅 <%= payslip.pay_period %></div>
     </div>
   </div>
 
-  <!-- Employee & Payslip Meta Info -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem; font-size: 0.95rem;">
-    <div>
-      <h4 style="color: var(--text-light); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Employee Details</h4>
-      <div style="margin-bottom: 0.25rem;"><strong style="font-size: 1.1rem; color: var(--text-primary);"><%= payslip.first_name %> <%= payslip.last_name %></strong></div>
-      <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Login ID: <code><%= payslip.login_id %></code></div>
-      <div style="color: var(--text-secondary);">Email: <%= payslip.email %></div>
+  <!-- Meta info grid -->
+  <div class="ps-meta">
+    <div class="ps-meta-block">
+      <div class="ps-meta-heading">Employee Details</div>
+      <div class="ps-emp-name"><%= payslip.first_name %> <%= payslip.last_name %></div>
+      <div class="ps-meta-row">Login ID: <code><%= payslip.login_id %></code></div>
+      <div class="ps-meta-row">Email: <%= payslip.email %></div>
     </div>
-    <div style="text-align: right;">
-      <h4 style="color: var(--text-light); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Payment Reference</h4>
-      <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Slip Ref ID: #PS-<%= String(payslip.id).padStart(5, '0') %></div>
-      <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Issued On: <%= new Date(payslip.created_at).toLocaleDateString() %></div>
-      <div style="color: var(--text-secondary);">Status: <span style="color: var(--accent); font-weight: 600;">PAID</span></div>
+    <div class="ps-meta-block ps-meta-block-right">
+      <div class="ps-meta-heading">Payment Reference</div>
+      <div class="ps-meta-row" style="font-size:0.95rem; font-weight:600; color:var(--text-primary);">
+        Ref #PS-<%= String(payslip.id).padStart(5, '0') %>
+      </div>
+      <div class="ps-meta-row">Issued: <%= new Date(payslip.created_at).toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'}) %></div>
+      <div>
+        <span class="ps-status-chip">
+          <span class="dot"></span> PAID
+        </span>
+      </div>
     </div>
   </div>
 
-  <!-- Component Table -->
-  <div class="table-container" style="border-radius: var(--radius-sm); margin-bottom: 2rem;">
-    <table>
+  <!-- Earnings Breakdown -->
+  <div class="ps-table-section">
+    <div class="ps-section-title">Earnings Breakdown</div>
+    <table class="ps-earn-table">
       <thead>
         <tr>
-          <th>Earnings Component Description</th>
-          <th style="text-align: right;">Percentage/Rule</th>
-          <th style="text-align: right;">Amount</th>
+          <th>Component</th>
+          <th class="col-center">Calculation Rule</th>
+          <th class="col-right">Amount (₹)</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong>Basic Salary</strong></td>
-          <td style="text-align: right; color: var(--text-secondary);">50.00% of Base Wage</td>
-          <td style="text-align: right; font-weight: 500;">$<%= parseFloat(payslip.basic_salary).toFixed(2) %></td>
+          <td>
+            <div class="ps-comp-name">Basic Salary</div>
+            <div class="ps-comp-rule">Core component of CTC</div>
+          </td>
+          <td class="col-center"><span class="ps-pct-badge">50% of Base Wage</span></td>
+          <td class="col-right"><span class="ps-amount">₹<%= parseFloat(payslip.basic_salary).toLocaleString('en-IN', {minimumFractionDigits:2}) %></span></td>
         </tr>
         <tr>
-          <td><strong>House Rent Allowance (HRA)</strong></td>
-          <td style="text-align: right; color: var(--text-secondary);">50.00% of Basic (25.00% of Base)</td>
-          <td style="text-align: right; font-weight: 500;">$<%= parseFloat(payslip.hra).toFixed(2) %></td>
+          <td>
+            <div class="ps-comp-name">House Rent Allowance (HRA)</div>
+            <div class="ps-comp-rule">Accommodation support</div>
+          </td>
+          <td class="col-center"><span class="ps-pct-badge">50% of Basic / 25% of Base</span></td>
+          <td class="col-right"><span class="ps-amount">₹<%= parseFloat(payslip.hra).toLocaleString('en-IN', {minimumFractionDigits:2}) %></span></td>
         </tr>
         <tr>
-          <td><strong>Other Allowances</strong></td>
-          <td style="text-align: right; color: var(--text-secondary);">Custom approved allowance</td>
-          <td style="text-align: right; font-weight: 500;">$<%= parseFloat(payslip.other_allowances).toFixed(2) %></td>
+          <td>
+            <div class="ps-comp-name">Other Allowances</div>
+            <div class="ps-comp-rule">Custom approved allowances</div>
+          </td>
+          <td class="col-center"><span class="ps-pct-badge">Fixed / HR-approved</span></td>
+          <td class="col-right"><span class="ps-amount">₹<%= parseFloat(payslip.other_allowances).toLocaleString('en-IN', {minimumFractionDigits:2}) %></span></td>
         </tr>
-        <tr style="border-top: 1px solid var(--border-color); font-weight: 600; font-size: 1.05rem;">
-          <td>Total Net Earnings Sum</td>
-          <td style="text-align: right; color: var(--text-light); font-weight: 400;">Sum of components</td>
-          <td style="text-align: right; color: var(--accent); font-size: 1.15rem;">$<%= parseFloat(payslip.net_salary).toFixed(2) %></td>
+        <tr class="ps-total-row">
+          <td colspan="2">
+            <span class="ps-total-label">💰 Total Net Take-Home</span>
+          </td>
+          <td class="col-right">
+            <span class="ps-total-amount">₹<%= parseFloat(payslip.net_salary).toLocaleString('en-IN', {minimumFractionDigits:2}) %></span>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Note/Signature -->
-  <div style="margin-top: 4rem; display: flex; justify-content: space-between; align-items: flex-end; font-size: 0.85rem; color: var(--text-secondary);">
+  <!-- Footer -->
+  <div class="ps-footer-note">
     <div>
-      <p style="font-style: italic; margin-bottom: 0;">This is a system-generated document and requires no physical signature.</p>
+      <div class="ps-ref-number">Reference: #PS-<%= String(payslip.id).padStart(5,'0') %> | Period: <%= payslip.pay_period %></div>
+      <div class="ps-note-text">
+        This is a computer-generated payslip and is valid without a physical signature. For discrepancies, contact your HR administrator.
+      </div>
     </div>
-    <div style="text-align: center; width: 200px; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
-      <strong>HR Officer Signature</strong>
+    <div class="ps-sig-block">
+      <div class="ps-sig-line">Authorised Signatory<br><span style="font-weight:400; color:var(--text-light);">HRMS Administration</span></div>
     </div>
   </div>
-</div>
 
-<style>
-  @media print {
-    body {
-      background-color: white !important;
-      color: black !important;
-    }
-    .sidebar, .no-print, header, footer {
-      display: none !important;
-    }
-    .main-content {
-      padding: 0 !important;
-      overflow: visible !important;
-    }
-    #payslip-print-area {
-      box-shadow: none !important;
-      border: none !important;
-      padding: 0 !important;
-      max-width: 100% !important;
-    }
-  }
-</style>
+</div>
 
 <%- include('../layouts/footer') %>
