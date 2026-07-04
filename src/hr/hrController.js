@@ -1,5 +1,7 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const HrModel = require('./hrModel');
+const { sendOnboardingEmail } = require('../utils/mailer');
 require('dotenv').config();
 
 // Helper to generate Login ID
@@ -14,6 +16,31 @@ const generateLoginId = (firstName, lastName, year, serial) => {
   const paddedSerial = String(serial).padStart(3, '0');
   
   return `${companyCode}${cleanFirst}${cleanLast}${year}${paddedSerial}`;
+};
+
+// Helper to generate a random secure password
+const generateRandomPassword = () => {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const specials = '@#$!&*';
+  const all = upper + lower + digits + specials;
+  
+  // Guarantee at least one of each required character type
+  let password = [
+    upper[crypto.randomInt(upper.length)],
+    lower[crypto.randomInt(lower.length)],
+    digits[crypto.randomInt(digits.length)],
+    specials[crypto.randomInt(specials.length)],
+  ];
+  
+  // Fill the rest to reach length 10
+  for (let i = 4; i < 10; i++) {
+    password.push(all[crypto.randomInt(all.length)]);
+  }
+  
+  // Shuffle the array
+  return password.sort(() => crypto.randomInt(3) - 1).join('');
 };
 
 module.exports = {
@@ -47,10 +74,10 @@ module.exports = {
       // Generate Login ID
       const loginId = generateLoginId(firstName, lastName, currentYear, nextSerial);
 
-      // Generate default password (hashed)
-      const defaultPassword = process.env.DEFAULT_EMPLOYEE_PASSWORD || 'Password@123';
+      // Generate a random secure password
+      const randomPassword = generateRandomPassword();
       const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(defaultPassword, salt);
+      const passwordHash = await bcrypt.hash(randomPassword, salt);
 
       // Save to database
       await HrModel.create({
@@ -64,13 +91,20 @@ module.exports = {
         serialNumber: nextSerial
       });
 
+      // Send welcome email with credentials
+      const emailResult = await sendOnboardingEmail(email, firstName, loginId, randomPassword);
+
+      const emailNote = emailResult.sent
+        ? `A welcome email with login credentials has been sent to <strong>${email}</strong>.`
+        : `SMTP not configured — credentials: Login ID: <code>${loginId}</code> | Password: <code>${randomPassword}</code> (check server console)`;
+
       const employees = await HrModel.getAll();
       res.render('hr/dashboard', {
         title: 'HRMS - Manage Employees',
         activePage: 'hr',
         employees,
         error: null,
-        success: `Employee onboarding successful! Login ID: ${loginId} (Default Password: ${defaultPassword})`
+        success: `Employee <strong>${firstName} ${lastName}</strong> onboarded! Login ID: <code>${loginId}</code>. ${emailNote}`
       });
     } catch (err) {
       console.error(err);
