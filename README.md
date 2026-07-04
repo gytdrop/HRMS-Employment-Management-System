@@ -13,15 +13,46 @@ A premium, human-centric Human Resource Management System designed for the Odoo 
 
 ## Interface Demos
 
-### Interactive Credentials Panel
-The login screen features an inline demo accounts drawer listing newly onboarded employee credentials and active accounts with single-click copy utility.
+### System Interactions & Tour
+A recorded session showing credentials lookup, logins, navigation states, check-in flows, and data updates across panels.
 
-![Demo Inbox Drawer](public/images/demo_inbox.png)
+![Demo Flow Walkthrough](public/images/admin_employee_tour.webp)
 
-### Walkthrough & Interaction
-A recorded session showing login workflows, slide-out dashboards, and fluid navigation states.
+---
 
-![Demo Flow Walkthrough](public/images/demo_interaction.webp)
+### Admin Portal Sections
+
+#### Dashboard Overview
+A comprehensive hub tracking total headcounts, presence ratios, ongoing leaves, and total wage bills alongside visual metrics.
+![Admin Dashboard](public/images/admin_dashboard.png)
+
+#### Attendance & Leave Control
+Management center for processing check-ins, tracking presence statuses, and reviewing pending leaves.
+![Admin Attendance & Leaves](public/images/admin_attendance.png)
+
+#### Employee Directory & Onboarding
+User management suite containing onboarding forms with system ID generators and active directories.
+![Admin Employee Management](public/images/admin_employees.png)
+
+#### Payroll & Base Wage Setup
+System configuration tools for base wages, basic components, HRAs, and allowances.
+![Admin Payroll & Structures](public/images/admin_payroll.png)
+
+---
+
+### Employee Portal Sections
+
+#### Employee Dashboard
+Personal employee dashboard offering summary cards, shortcuts, and presence status indicators.
+![Employee Dashboard](public/images/employee_dashboard.png)
+
+#### Personal Attendance & Time-Off Requests
+Logs showing clock timings, work hours, presence tracking, and leave request submission forms.
+![Employee Attendance Log](public/images/employee_attendance.png)
+
+#### Personal Payslip History
+Monthly salary metrics, breakdown allowances, deductions, and downloadable payslips.
+![Employee Payroll Breakdown](public/images/employee_payroll.png)
 
 ## Tech Stack
 
