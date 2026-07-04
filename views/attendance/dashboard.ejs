@@ -1,0 +1,199 @@
+<%- include('../layouts/header') %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <div>
+    <h1>Attendance & Leave Dashboard</h1>
+    <p>Track your daily logs and request time-off</p>
+  </div>
+  <% if (user.role === 'admin') { %>
+    <a href="/attendance/admin-review" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+      <span class="material-symbols-outlined">rule</span> Review Requests
+    </a>
+  <% } %>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+  <!-- Left Side: Attendance Control & Logs -->
+  <div>
+    <!-- Attendance Card -->
+    <div class="card">
+      <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="color: var(--primary);">timer</span>
+        Today's Work Status
+      </h3>
+      
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <% if (todayRecord && todayRecord.check_in) { %>
+          <span class="status-dot status-present"></span>
+          <div>
+            <strong>Checked In</strong>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+              Since: <%= new Date(todayRecord.check_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+              <% if (todayRecord.check_out) { %>
+                | Checked Out: <%= new Date(todayRecord.check_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+              <% } %>
+            </div>
+          </div>
+        <% } else { %>
+          <span class="status-dot status-absent"></span>
+          <div>
+            <strong>Not Checked In</strong>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Please clock in to record your attendance.</div>
+          </div>
+        <% } %>
+      </div>
+
+      <div style="display: flex; gap: 1rem;">
+        <form action="/attendance/check-in" method="POST" style="flex: 1;">
+          <button type="submit" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" 
+            <%= (todayRecord && todayRecord.check_in) ? 'disabled style="background-color: var(--text-light); cursor: not-allowed;"' : '' %>>
+            <span class="material-symbols-outlined">play_arrow</span> Check In
+          </button>
+        </form>
+
+        <form action="/attendance/check-out" method="POST" style="flex: 1;">
+          <button type="submit" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;"
+            <%= (!todayRecord || !todayRecord.check_in || todayRecord.check_out) ? 'disabled style="color: var(--text-light); cursor: not-allowed; opacity: 0.6;"' : '' %>>
+            <span class="material-symbols-outlined">stop</span> Check Out
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Recent Logs Card -->
+    <div class="card">
+      <h3 style="margin-bottom: 1rem;">Recent Attendance Logs</h3>
+      <% if (recentLogs && recentLogs.length > 0) { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentLogs.forEach(log => { %>
+                <tr>
+                  <td><%= new Date(log.work_date).toLocaleDateString() %></td>
+                  <td><%= log.check_in ? new Date(log.check_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
+                  <td><%= log.check_out ? new Date(log.check_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
+                  <td>
+                    <span style="text-transform: capitalize; font-weight: 500; color: <%= log.status === 'present' ? 'var(--accent)' : 'var(--danger)' %>">
+                      <%= log.status %>
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p style="text-align: center; color: var(--text-light); padding: 1.5rem 0;">No attendance logs found.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Right Side: Leave Application & Balances -->
+  <div>
+    <!-- Leave Balances Card -->
+    <div class="card" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+      <div style="border-right: 1px solid var(--border-color); padding: 0.5rem 0;">
+        <span style="font-size: 2rem; font-weight: 700; color: var(--primary);"><%= leaveBalances.paid_leave_balance %></span>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Paid Leaves</div>
+      </div>
+      <div style="border-right: 1px solid var(--border-color); padding: 0.5rem 0;">
+        <span style="font-size: 2rem; font-weight: 700; color: var(--secondary);"><%= leaveBalances.sick_leave_balance %></span>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Sick Leaves</div>
+      </div>
+      <div style="padding: 0.5rem 0;">
+        <span style="font-size: 2rem; font-weight: 700; color: var(--text-primary);"><%= leaveBalances.unpaid_leave_taken %></span>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Unpaid Taken</div>
+      </div>
+    </div>
+
+    <!-- Apply Leave Card -->
+    <div class="card">
+      <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="color: var(--primary);">flight_takeoff</span>
+        Request Leave / Time-Off
+      </h3>
+      <form action="/attendance/apply-leave" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="leaveType">Leave Type</label>
+          <select id="leaveType" name="leaveType" class="form-input" style="appearance: auto;" required>
+            <option value="Paid">Paid Leave</option>
+            <option value="Sick">Sick Leave</option>
+            <option value="Unpaid">Unpaid Leave</option>
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="startDate">Start Date</label>
+            <input type="date" id="startDate" name="startDate" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="endDate">End Date</label>
+            <input type="date" id="endDate" name="endDate" class="form-input" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reason">Reason / Comments</label>
+          <textarea id="reason" name="reason" class="form-input" rows="3" placeholder="Brief explanation for time-off..." required style="resize: vertical;"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; font-weight: 600;">
+          Submit Application
+        </button>
+      </form>
+    </div>
+
+    <!-- History Card -->
+    <div class="card">
+      <h3 style="margin-bottom: 1rem;">Time-Off Request History</h3>
+      <% if (leaveHistory && leaveHistory.length > 0) { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Dates</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% leaveHistory.forEach(leave => { %>
+                <tr>
+                  <td><strong><%= leave.leave_type %></strong></td>
+                  <td style="font-size: 0.85rem;">
+                    <%= new Date(leave.start_date).toLocaleDateString() %> - <%= new Date(leave.end_date).toLocaleDateString() %>
+                  </td>
+                  <td>
+                    <% 
+                      let statusColor = 'var(--text-light)';
+                      let statusIcon = 'pending';
+                      if (leave.status === 'Approved') { statusColor = 'var(--accent)'; statusIcon = 'check_circle'; }
+                      else if (leave.status === 'Rejected') { statusColor = 'var(--danger)'; statusIcon = 'cancel'; }
+                    %>
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: <%= statusColor %>">
+                      <span class="material-symbols-outlined" style="font-size: 16px;"><%= statusIcon %></span>
+                      <%= leave.status %>
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p style="text-align: center; color: var(--text-light); padding: 1rem 0;">No leave request history.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

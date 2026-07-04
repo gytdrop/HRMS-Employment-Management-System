@@ -1,0 +1,73 @@
+<%- include('../layouts/header') %>
+
+<div style="margin-bottom: 2rem;">
+  <a href="/attendance/dashboard" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 4px; padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-bottom: 1rem;">
+    <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span> Back to My Attendance
+  </a>
+  <h1>Pending Leave Applications</h1>
+  <p>Review and act on employee time-off requests</p>
+</div>
+
+<div class="card">
+  <% if (pendingLeaves && pendingLeaves.length > 0) { %>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Type</th>
+            <th>Dates</th>
+            <th>Reason</th>
+            <th>Requested On</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% pendingLeaves.forEach(leave => { %>
+            <tr>
+              <td>
+                <strong><%= leave.first_name %> <%= leave.last_name %></strong>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);"><%= leave.login_id %></div>
+              </td>
+              <td><strong><%= leave.leave_type %></strong></td>
+              <td style="font-size: 0.85rem;">
+                <%= new Date(leave.start_date).toLocaleDateString() %> to <%= new Date(leave.end_date).toLocaleDateString() %>
+              </td>
+              <td style="font-size: 0.9rem; max-width: 250px; white-space: normal; word-break: break-all;">
+                <%= leave.reason %>
+              </td>
+              <td style="font-size: 0.8rem; color: var(--text-light);">
+                <%= new Date(leave.created_at).toLocaleString() %>
+              </td>
+              <td>
+                <div style="display: flex; gap: 8px;">
+                  <form action="/attendance/leave-action" method="POST">
+                    <input type="hidden" name="leaveId" value="<%= leave.id %>" />
+                    <input type="hidden" name="action" value="Approved" />
+                    <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background-color: var(--accent);">
+                      Approve
+                    </button>
+                  </form>
+                  <form action="/attendance/leave-action" method="POST">
+                    <input type="hidden" name="leaveId" value="<%= leave.id %>" />
+                    <input type="hidden" name="action" value="Rejected" />
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-color: var(--danger); color: var(--danger);">
+                      Reject
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <div style="text-align: center; padding: 3rem 0; color: var(--text-light);">
+      <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 1rem;">check_circle</span>
+      <p style="font-size: 1.1rem; margin-bottom: 0;">No pending leave requests found!</p>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../layouts/footer') %>
