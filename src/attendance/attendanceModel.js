@@ -29,7 +29,11 @@ module.exports = {
     const query = `
       UPDATE attendance 
       SET check_out = CURRENT_TIMESTAMP 
-      WHERE employee_id = $1 AND work_date = CURRENT_DATE
+      WHERE id = (
+        SELECT id FROM attendance 
+        WHERE employee_id = $1 AND check_out IS NULL 
+        ORDER BY work_date DESC LIMIT 1
+      )
       RETURNING *
     `;
     const res = await db.query(query, [employeeId]);
@@ -91,14 +95,52 @@ module.exports = {
   },
 
   // Admin action (Approve/Reject) on leave request
+  // Transactional: deducts leave balances when Approved
   updateLeaveStatus: async (leaveId, status) => {
-    const query = `
-      UPDATE leaves 
-      SET status = $1 
-      WHERE id = $2
-      RETURNING *
-    `;
-    const res = await db.query(query, [status, leaveId]);
-    return res.rows[0];
+    const client = await db.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // 1. Update the leave request status
+      const leaveRes = await client.query(
+        `UPDATE leaves SET status = $1 WHERE id = $2 RETURNING *`,
+        [status, leaveId]
+      );
+      const leave = leaveRes.rows[0];
+
+      // 2. If Approved, calculate days and deduct from balances
+      if (status === 'Approved') {
+        const daysRes = await client.query(
+          `SELECT (end_date - start_date + 1) AS days FROM leaves WHERE id = $1`,
+          [leaveId]
+        );
+        const days = daysRes.rows[0].days;
+
+        if (leave.leave_type === 'Paid') {
+          await client.query(
+            `UPDATE leave_balances SET paid_leave_balance = paid_leave_balance - $1 WHERE employee_id = $2`,
+            [days, leave.employee_id]
+          );
+        } else if (leave.leave_type === 'Sick') {
+          await client.query(
+            `UPDATE leave_balances SET sick_leave_balance = sick_leave_balance - $1 WHERE employee_id = $2`,
+            [days, leave.employee_id]
+          );
+        } else if (leave.leave_type === 'Unpaid') {
+          await client.query(
+            `UPDATE leave_balances SET unpaid_leave_taken = unpaid_leave_taken + $1 WHERE employee_id = $2`,
+            [days, leave.employee_id]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+      return leave;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 };

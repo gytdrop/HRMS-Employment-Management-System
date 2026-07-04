@@ -354,7 +354,7 @@
       <h3>Employee Salary Structures</h3>
     </div>
 
-    <% if (structures && structures.length > 0) { %>
+
     <div style="overflow-x: auto;">
       <table class="payroll-admin-table" style="width:100%; border-collapse:collapse; text-align:left;">
         <thead>
@@ -369,9 +369,7 @@
           </tr>
         </thead>
         <tbody>
-          <% structures.forEach(struct => {
-            const net = parseFloat(struct.basic_salary||0) + parseFloat(struct.hra||0) + parseFloat(struct.other_allowances||0);
-          %>
+          <% structures.forEach(function(struct) { %>
           <tr>
             <td style="padding:0.9rem 1.25rem; border-bottom:1px solid var(--border-color);">
               <div style="display:flex; align-items:center; gap:10px;">
@@ -402,7 +400,7 @@
                 </div>
               </td>
               <td style="padding:0.9rem 1.25rem; border-bottom:1px solid var(--border-color);">
-                <span style="color:var(--accent); font-weight:700;">₹<%= net.toLocaleString('en-IN',{minimumFractionDigits:2}) %></span>
+                <span style="color:var(--accent); font-weight:700;">₹<%= (parseFloat(struct.basic_salary||0) + parseFloat(struct.hra||0) + parseFloat(struct.other_allowances||0)).toLocaleString('en-IN',{minimumFractionDigits:2}) %></span>
               </td>
               <td style="padding:0.9rem 1.25rem; border-bottom:1px solid var(--border-color);">
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -420,17 +418,17 @@
                 </div>
               </td>
           </tr>
-          <% }) %>
+          <% }); %>
         </tbody>
       </table>
-    </div>
-    <% } else { %>
-    <div class="empty-state">
-      <span class="material-symbols-outlined">manage_accounts</span>
-      <p>No employees found to configure.</p>
-    </div>
-    <% } %>
   </div>
+
+  <% } else { %>
+  <div class="empty-state">
+    <span class="material-symbols-outlined">manage_accounts</span>
+    <p>No employees found to configure.</p>
+  </div>
+  <% } %>
 
 <!-- ═══════════════════════ EMPLOYEE VIEW ═══════════════════════ -->
 <% } else { %>
