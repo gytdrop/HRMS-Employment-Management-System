@@ -95,14 +95,16 @@ module.exports = {
   },
 
   // ── Demo Credential Inbox (login page panel) ─────────────────
-  // Returns all credentials ordered newest first
+  // Returns unread credentials of users who haven't updated their passwords yet
   getInbox: async (req, res) => {
     try {
       const result = await db.query(
-        `SELECT id, employee_name, login_id, temp_password, email, is_read,
-                to_char(created_at, 'DD Mon YYYY, HH12:MI AM') AS created_label
-         FROM credential_inbox
-         ORDER BY created_at DESC
+        `SELECT ci.id, ci.employee_name, ci.login_id, ci.temp_password, ci.email, ci.is_read,
+                to_char(ci.created_at, 'DD Mon YYYY, HH12:MI AM') AS created_label
+         FROM credential_inbox ci
+         JOIN employees e ON ci.login_id = e.login_id
+         WHERE e.password_updated = FALSE
+         ORDER BY ci.created_at DESC
          LIMIT 20`
       );
       res.json({ success: true, items: result.rows });
