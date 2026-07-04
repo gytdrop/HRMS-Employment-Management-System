@@ -52,6 +52,45 @@
     letter-spacing: 0.06em;
   }
 
+  /* Inline hero stats (beside title) */
+  .hero-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .hero-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.38rem 0.85rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    white-space: nowrap;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .hero-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+  .hero-stat .material-symbols-outlined {
+    font-size: 15px;
+    color: var(--primary);
+  }
+  .hero-stat .hs-val {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .hero-stat .hs-lbl {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  @media (max-width: 700px) { .hero-stats { display: none; } }
+
   /* Admin salary table */
   .payroll-table-card {
     background: var(--bg-card);
@@ -262,6 +301,35 @@
       <p>View your salary breakdown and download monthly payslips.</p>
     <% } %>
   </div>
+
+  <% if (user.role === 'admin' && structures && structures.length > 0) {
+    const _totalWage  = structures.reduce((s,r) => s + parseFloat(r.base_wage || 0), 0);
+    const _totalNet   = structures.reduce((s,r) => s + parseFloat(r.basic_salary||0) + parseFloat(r.hra||0) + parseFloat(r.other_allowances||0), 0);
+    const _configured = structures.filter(r => parseFloat(r.base_wage) > 0).length;
+  %>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <span class="material-symbols-outlined">groups</span>
+      <span class="hs-val"><%= structures.length %></span>
+      <span class="hs-lbl">Employees</span>
+    </div>
+    <div class="hero-stat">
+      <span class="material-symbols-outlined" style="color:var(--accent);">task_alt</span>
+      <span class="hs-val"><%= _configured %></span>
+      <span class="hs-lbl">Configured</span>
+    </div>
+    <div class="hero-stat">
+      <span class="material-symbols-outlined" style="color:var(--secondary);">account_balance</span>
+      <span class="hs-val">₹<%= _totalWage.toLocaleString('en-IN',{maximumFractionDigits:0}) %></span>
+      <span class="hs-lbl">Wage Bill</span>
+    </div>
+    <div class="hero-stat">
+      <span class="material-symbols-outlined" style="color:var(--accent);">payments</span>
+      <span class="hs-val">₹<%= _totalNet.toLocaleString('en-IN',{maximumFractionDigits:0}) %></span>
+      <span class="hs-lbl">Net Payout</span>
+    </div>
+  </div>
+  <% } %>
 </div>
 
 <!-- ── Alerts (rendered as toasts via global app.js) ────── -->
@@ -275,35 +343,7 @@
 <!-- ═══════════════════════ ADMIN VIEW ═══════════════════════ -->
 <% if (user.role === 'admin') { %>
 
-  <% if (structures && structures.length > 0) {
-    const totalWage   = structures.reduce((s,r) => s + parseFloat(r.base_wage || 0), 0);
-    const totalNet    = structures.reduce((s,r) => s + parseFloat(r.basic_salary||0) + parseFloat(r.hra||0) + parseFloat(r.other_allowances||0), 0);
-    const configured  = structures.filter(r => parseFloat(r.base_wage) > 0).length;
-  %>
-  <!-- Stat strip -->
-  <div class="stat-strip">
-    <div class="stat-card">
-      <span class="material-symbols-outlined stat-icon">groups</span>
-      <span class="stat-value"><%= structures.length %></span>
-      <span class="stat-label">Total Employees</span>
-    </div>
-    <div class="stat-card">
-      <span class="material-symbols-outlined stat-icon" style="color: var(--accent);">task_alt</span>
-      <span class="stat-value"><%= configured %></span>
-      <span class="stat-label">Salary Configured</span>
-    </div>
-    <div class="stat-card">
-      <span class="material-symbols-outlined stat-icon" style="color: var(--secondary);">account_balance</span>
-      <span class="stat-value">₹<%= totalWage.toLocaleString('en-IN', {maximumFractionDigits:0}) %></span>
-      <span class="stat-label">Total Wage Bill</span>
-    </div>
-    <div class="stat-card">
-      <span class="material-symbols-outlined stat-icon" style="color: #557a62;">payments</span>
-      <span class="stat-value">₹<%= totalNet.toLocaleString('en-IN', {maximumFractionDigits:0}) %></span>
-      <span class="stat-label">Total Net Payout</span>
-    </div>
-  </div>
-  <% } %>
+  <% if (structures && structures.length > 0) { %>
 
   <!-- Salary table -->
   <div class="payroll-table-card">
