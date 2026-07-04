@@ -18,6 +18,11 @@ A recorded session showing credentials lookup, logins, navigation states, check-
 
 ![Demo Flow Walkthrough](public/images/admin_employee_tour.webp)
 
+### Light Mode Overview
+The system supports full runtime theme-switching to accommodate varying preferences, leveraging warm earthy accents in light settings.
+
+![Light Mode Dashboard](public/images/light_mode_dashboard.png)
+
 ---
 
 ### Admin Portal Sections
