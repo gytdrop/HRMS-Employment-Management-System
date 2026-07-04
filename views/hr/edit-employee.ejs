@@ -1,0 +1,63 @@
+<%- include('../layouts/header') %>
+
+<div style="margin-bottom: 2rem;">
+  <a href="/hr/dashboard" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 4px; padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-bottom: 1rem;">
+    <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span> Back to Directory
+  </a>
+  <h1>Edit Employee Profile</h1>
+  <p>Update personal info and permissions for <%= employee.first_name %> <%= employee.last_name %></p>
+</div>
+
+<% if (error) { %>
+  <div style="background-color: #fbebeb; color: var(--danger); border: 1px solid #f6d1d1; border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
+    <span class="material-symbols-outlined" style="margin-right: 8px; font-size: 20px;">error</span>
+    <%= error %>
+  </div>
+<% } %>
+
+<% if (success) { %>
+  <div style="background-color: #eaf2eb; color: var(--accent); border: 1px solid #d2e4d5; border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
+    <span class="material-symbols-outlined" style="margin-right: 8px; font-size: 20px;">check_circle</span>
+    <%= success %>
+  </div>
+<% } %>
+
+<div class="card" style="max-width: 600px;">
+  <form action="/hr/edit/<%= employee.id %>" method="POST">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div class="form-group">
+        <label class="form-label" for="firstName">First Name</label>
+        <input type="text" id="firstName" name="firstName" class="form-input" value="<%= employee.first_name %>" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="lastName">Last Name</label>
+        <input type="text" id="lastName" name="lastName" class="form-input" value="<%= employee.last_name %>" required />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="email">Email Address</label>
+      <input type="email" id="email" name="email" class="form-input" value="<%= employee.email %>" required />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="login_id_readonly">Login ID (System Generated)</label>
+      <input type="text" id="login_id_readonly" class="form-input" value="<%= employee.login_id %>" readonly style="background-color: var(--bg-secondary); color: var(--text-secondary); cursor: not-allowed;" />
+    </div>
+
+    <div class="form-group" style="margin-bottom: 2rem;">
+      <label class="form-label" for="role">Role Permission</label>
+      <select id="role" name="role" class="form-input" style="appearance: auto;" required>
+        <option value="employee" <%= employee.role === 'employee' ? 'selected' : '' %>>Employee (Read-Only)</option>
+        <option value="admin" <%= employee.role === 'admin' ? 'selected' : '' %>>Admin / HR Officer</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="font-weight: 600;">
+      Save Changes
+    </button>
+  </form>
+</div>
+
+<%- include('../layouts/footer') %>
