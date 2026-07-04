@@ -100,11 +100,34 @@ module.exports = {
         });
       }
 
+      // Parse period and calculate dates
+      const [yearStr, monthStr] = payPeriod.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+
+      const startDate = new Date(Date.UTC(year, month - 1, 1));
+      const endDate = new Date(Date.UTC(year, month, 0));
+
+      const daysInMonth = endDate.getUTCDate();
+      const startDateStr = startDate.toISOString().substring(0, 10);
+      const endDateStr = endDate.toISOString().substring(0, 10);
+
+      // Fetch unpaid days metrics
+      const unpaidLeaveDays = await PayrollModel.getUnpaidLeaveDaysCount(employeeId, startDateStr, endDateStr);
+      const absentDays = await PayrollModel.getAbsentDaysCount(employeeId, startDateStr, endDateStr);
+      const totalUnpaidDays = unpaidLeaveDays + absentDays;
+
       const baseWage = parseFloat(struct.base_wage);
       const basicSalary = parseFloat(struct.basic_salary);
       const hra = parseFloat(struct.hra);
       const otherAllowances = parseFloat(struct.other_allowances);
-      const netSalary = basicSalary + hra + otherAllowances; // Deductions can be added later as needed
+
+      // Deduct pro-rated rate per unpaid/absent day
+      const dailyRate = baseWage / daysInMonth;
+      const deductions = Math.round((totalUnpaidDays * dailyRate) * 100) / 100;
+
+      // Net Salary = components sum - deductions (min 0)
+      const netSalary = Math.max(0, Math.round((basicSalary + hra + otherAllowances - deductions) * 100) / 100);
 
       await PayrollModel.createPayslip({
         employeeId,
@@ -113,6 +136,7 @@ module.exports = {
         basicSalary,
         hra,
         otherAllowances,
+        deductions,
         netSalary
       });
 
@@ -122,7 +146,7 @@ module.exports = {
         activePage: 'payroll',
         structures,
         error: null,
-        success: `Payslip for period ${payPeriod} generated successfully!`
+        success: `Payslip for period ${payPeriod} generated successfully! (${totalUnpaidDays} unpaid days deducted: $${deductions.toFixed(2)})`
       });
     } catch (err) {
       console.error(err);
