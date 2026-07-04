@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'HRMS' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Material Symbols for icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+<body>
+  <div class="app-container">
+    <% if (typeof user !== 'undefined' && user) { %>
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="brand">
+          <h2 style="color: var(--primary); font-weight: 700; letter-spacing: -0.5px;">HRMS</h2>
+          <span style="font-size: 0.8rem; color: var(--text-light); text-transform: uppercase;"><%= user.role %> Panel</span>
+        </div>
+
+        <nav class="nav-list">
+          <!-- Common for all logged-in users -->
+          <div class="nav-item">
+            <a href="/attendance/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'attendance' ? 'active' : '' %>">
+              <span class="material-symbols-outlined" style="margin-right: 8px;">calendar_today</span>
+              Attendance
+            </a>
+          </div>
+
+          <!-- Admin Only Links -->
+          <% if (user.role === 'admin') { %>
+            <div class="nav-item">
+              <a href="/hr/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'hr' ? 'active' : '' %>">
+                <span class="material-symbols-outlined" style="margin-right: 8px;">groups</span>
+                Employees
+              </a>
+            </div>
+          <% } %>
+
+          <!-- Payroll Link (Conditional on views) -->
+          <div class="nav-item">
+            <a href="/payroll/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'payroll' ? 'active' : '' %>">
+              <span class="material-symbols-outlined" style="margin-right: 8px;">payments</span>
+              Payroll
+            </a>
+          </div>
+        </nav>
+
+        <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+          <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">
+            <strong style="display: block; font-weight: 600;"><%= user.first_name %> <%= user.last_name %></strong>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);"><%= user.login_id %></span>
+          </div>
+          <a href="/auth/logout" class="btn btn-secondary" style="display: block; padding: 0.5rem; font-size: 0.85rem; width: 100%;">
+            <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">logout</span>Logout
+          </a>
+        </div>
+      </aside>
+    <% } %>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
