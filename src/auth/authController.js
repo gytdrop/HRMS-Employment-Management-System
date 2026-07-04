@@ -122,5 +122,20 @@ module.exports = {
     } catch (err) {
       res.json({ success: false });
     }
+  },
+
+  // Get active accounts who have updated their passwords (changed temporary password)
+  getActiveAccounts: async (req, res) => {
+    try {
+      const result = await db.query(
+        `SELECT login_id, email, first_name, last_name, role 
+         FROM employees 
+         ORDER BY role DESC, first_name ASC`
+      );
+      res.json({ success: true, items: result.rows });
+    } catch (err) {
+      console.error(err);
+      res.json({ success: false, items: [] });
+    }
   }
 };

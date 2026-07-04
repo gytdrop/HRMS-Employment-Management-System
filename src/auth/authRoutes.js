@@ -13,5 +13,6 @@ router.get('/logout', authController.handleLogout);
 // ── Credential inbox (demo panel on login page) ──────────────
 router.get('/inbox', authController.getInbox);
 router.post('/inbox/read', authController.markInboxRead);
+router.get('/active-accounts', authController.getActiveAccounts);
 
 module.exports = router;

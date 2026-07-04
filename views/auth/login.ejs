@@ -278,6 +278,16 @@
       Loading accounts…
     </div>
   </div>
+  <!-- Existing Active Users section -->
+  <div style="border-top:1px solid var(--border-color); padding:1rem 1.25rem 1.25rem; background:var(--bg-secondary); flex-shrink:0;">
+    <h4 style="margin:0 0 0.5rem 0; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); display:flex; align-items:center; gap:4px;">
+      <span class="material-symbols-outlined" style="font-size:16px;">people</span>
+      Existing Active Accounts (Login IDs)
+    </h4>
+    <div id="existing-accounts-list" style="display:flex; flex-wrap:wrap; gap:6px;">
+      <span style="font-size:0.75rem; color:var(--text-light);">Loading active IDs…</span>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -285,6 +295,7 @@
     document.getElementById('inbox-overlay').classList.add('is-open');
     document.getElementById('inbox-panel').classList.add('is-open');
     loadInbox();
+    loadActiveAccounts();
   }
 
   function closeInbox() {
@@ -327,6 +338,28 @@
       })
       .catch(function() {
         document.getElementById('inbox-list').innerHTML = '<div style="text-align:center; color:var(--text-light); font-size:0.85rem; padding:2rem 0;">Failed to load accounts.</div>';
+      });
+  }
+
+  function loadActiveAccounts() {
+    fetch('/auth/active-accounts')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var list = document.getElementById('existing-accounts-list');
+        if (!data.items || data.items.length === 0) {
+          list.innerHTML = '<span style="font-size:0.75rem; color:var(--text-light);">No active accounts.</span>';
+          return;
+        }
+        list.innerHTML = data.items.map(function(item) {
+          var label = item.first_name + ' (' + item.role + ')';
+          return '<button class="copyable-val" onclick="copyText(\'' + escapeHtml(item.login_id) + '\', this)" style="font-size:0.72rem; padding:0.12rem 0.4rem;" title="Copy Login ID for ' + escapeHtml(label) + '">' +
+            escapeHtml(item.login_id) + ' <span style="font-size:0.65rem; color:var(--text-light); font-weight:normal;">' + escapeHtml(label) + '</span>' +
+            '<span class="material-symbols-outlined" style="font-size:10px; margin-left:2px;">content_copy</span>' +
+          '</button>';
+        }).join('');
+      })
+      .catch(function() {
+        document.getElementById('existing-accounts-list').innerHTML = '<span style="font-size:0.75rem; color:var(--text-light);">Failed to load accounts.</span>';
       });
   }
 
