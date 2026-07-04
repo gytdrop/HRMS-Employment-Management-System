@@ -83,6 +83,90 @@ const sendOnboardingEmail = async (email, firstName, loginId, randomPassword) =>
   }
 };
 
+/**
+ * Sends a monthly payslip email with a breakdown of earnings and deductions
+ */
+const sendPayslipEmail = async (email, firstName, period, basic, hra, other, deductions, net) => {
+  const transporter = getTransporter();
+  const from = process.env.SMTP_FROM || '"HRMS Team" <no-reply@hrms.com>';
+
+  const mailOptions = {
+    from,
+    to: email,
+    subject: `HRMS - Payslip Issued for ${period}`,
+    html: `
+      <div style="font-family: 'Outfit', Arial, sans-serif; line-height: 1.6; color: #2d2a26; max-width: 600px; margin: 0 auto; border: 1px solid #e5dfd5; border-radius: 12px; padding: 25px; background-color: #fcfbfa;">
+        <h2 style="color: #c85a32; border-bottom: 2px solid #c85a32; padding-bottom: 10px; margin-top: 0;">Monthly Earnings Statement</h2>
+        <p>Dear ${firstName},</p>
+        <p>Your salary payslip for the period <strong>${period}</strong> has been generated and approved. Below is a summary of your earnings statement:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5dfd5;">
+          <thead>
+            <tr style="background-color: #f4f1ea;">
+              <th style="padding: 12px; border-bottom: 1px solid #e5dfd5; text-align: left; font-size: 0.85rem; text-transform: uppercase;">Description</th>
+              <th style="padding: 12px; border-bottom: 1px solid #e5dfd5; text-align: right; font-size: 0.85rem; text-transform: uppercase;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 10px 12px; border-bottom: 1px solid #e5dfd5;">Basic Salary (50%)</td>
+              <td style="padding: 10px 12px; border-bottom: 1px solid #e5dfd5; text-align: right; font-weight: bold;">₹${parseFloat(basic).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 12px; border-bottom: 1px solid #e5dfd5;">House Rent Allowance (HRA)</td>
+              <td style="padding: 10px 12px; border-bottom: 1px solid #e5dfd5; text-align: right; font-weight: bold;">₹${parseFloat(hra).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 12px; border-bottom: 1px solid #e5dfd5;">Other Allowances</td>
+              <td style="padding: 10px 12px; border-bottom: 1px solid #e5dfd5; text-align: right; font-weight: bold;">₹${parseFloat(other).toFixed(2)}</td>
+            </tr>
+            ${parseFloat(deductions) > 0 ? `
+            <tr style="color: #b33939;">
+              <td style="padding: 10px 12px; border-bottom: 1px solid #e5dfd5;">Deductions (Leaves/Absences)</td>
+              <td style="padding: 10px 12px; border-bottom: 1px solid #e5dfd5; text-align: right; font-weight: bold;">-₹${parseFloat(deductions).toFixed(2)}</td>
+            </tr>
+            ` : ''}
+            <tr style="background-color: #f4f1ea; font-size: 1.05rem; font-weight: bold;">
+              <td style="padding: 12px;">Net Salary Take-Home</td>
+              <td style="padding: 12px; text-align: right; color: #557a62;">₹${parseFloat(net).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>You can view, print, or download your detailed invoice slip by logging in to the HRMS portal.</p>
+        <p style="font-size: 0.85rem; color: #9e958c; font-style: italic; margin-top: 30px; border-top: 1px solid #e5dfd5; padding-top: 15px;">
+          This is an automated notification. Please do not reply directly to this email.
+        </p>
+      </div>
+    `,
+  };
+
+  if (transporter) {
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`✉️ Payslip email successfully sent to ${email}: ${info.messageId}`);
+      return { success: true, sent: true };
+    } catch (error) {
+      console.error(`❌ Failed to send payslip email to ${email}:`, error);
+      return { success: false, sent: false, error };
+    }
+  } else {
+    // Fallback Mock Log if SMTP is not configured
+    console.log('\n=============================================================');
+    console.log('✉️  [MOCK EMAIL SENT - SMTP NOT CONFIGURED IN .env]');
+    console.log(`To: ${email}`);
+    console.log(`Subject: ${mailOptions.subject}`);
+    console.log(`Body Details:`);
+    console.log(`  - Period: ${period}`);
+    console.log(`  - Earnings components: Basic ₹${basic}, HRA ₹${hra}, Other Allowances ₹${other}`);
+    console.log(`  - Deductions: -₹${deductions}`);
+    console.log(`  - Net Salary Paid: ₹${net}`);
+    console.log('=============================================================\n');
+    return { success: true, sent: false, mock: true };
+  }
+};
+
 module.exports = {
   sendOnboardingEmail,
+  sendPayslipEmail,
 };

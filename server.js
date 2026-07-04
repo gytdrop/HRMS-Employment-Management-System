@@ -34,14 +34,9 @@ app.use((req, res, next) => {
 // Import Middlewares
 const { requireLogin } = require('./src/middleware/auth');
 
-// Root Route
+// Root Route — always lands on the new analytics/personal dashboard
 app.get('/', requireLogin, (req, res) => {
-  // If user is Admin, redirect to HR dashboard, else to Attendance dashboard
-  if (req.session.user.role === 'admin') {
-    res.redirect('/hr/dashboard');
-  } else {
-    res.redirect('/attendance/dashboard');
-  }
+  res.redirect('/dashboard');
 });
 
 // Load Modules Routes (Placeholders loaded for branching integration)
@@ -71,6 +66,13 @@ try {
   app.use('/payroll', requireLogin, payrollRoutes);
 } catch (e) {
   console.log('ℹ️ Payroll routes not yet loaded (Waiting for feature/payroll-logic branch)');
+}
+
+try {
+  const dashboardRoutes = require('./src/dashboard/dashboardRoutes');
+  app.use('/dashboard', requireLogin, dashboardRoutes);
+} catch (e) {
+  console.log('ℹ️ Dashboard routes not yet loaded');
 }
 
 // 404 Route

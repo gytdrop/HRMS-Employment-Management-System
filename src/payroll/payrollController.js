@@ -1,4 +1,5 @@
 const PayrollModel = require('./payrollModel');
+const { sendPayslipEmail } = require('../utils/mailer');
 
 module.exports = {
   // Render payroll dashboard (Admin views all employee salary structures, Employee views their own)
@@ -139,6 +140,18 @@ module.exports = {
         deductions,
         netSalary
       });
+
+      // Send automated email notification asynchronously (non-blocking)
+      sendPayslipEmail(
+        struct.email,
+        struct.first_name,
+        payPeriod,
+        basicSalary,
+        hra,
+        otherAllowances,
+        deductions,
+        netSalary
+      ).catch(e => console.error('❌ Failed to send payslip email:', e));
 
       const structures = await PayrollModel.getAllStructures();
       res.render('payroll/dashboard', {

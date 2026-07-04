@@ -1,0 +1,177 @@
+<%- include('../layouts/header') %>
+
+<%
+  const monthlyNetDisplay = '₹' + (stats.monthlyNet || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  const latestPayslipDisplay = stats.latestPayslipNet != null
+    ? '₹' + stats.latestPayslipNet.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+    : '—';
+%>
+
+<!-- ── Page hero ──────────────────────────────────────── -->
+<div style="margin-bottom: 1.75rem;">
+  <h1>My Dashboard</h1>
+  <p>Your day-at-a-glance: attendance, leave, and the latest pay.</p>
+</div>
+
+<!-- ── Stat cards ─────────────────────────────────────── -->
+<div class="stat-strip">
+  <div class="stat-card">
+    <% if (stats.todayStatusType === 'present') { %>
+      <span class="material-symbols-outlined stat-icon" style="color: var(--accent);">check_circle</span>
+    <% } else { %>
+      <span class="material-symbols-outlined stat-icon" style="color: var(--secondary);">schedule</span>
+    <% } %>
+    <span class="stat-value"><%= stats.todayStatus %></span>
+    <span class="stat-label">Today's Status</span>
+    <% if (stats.todayCheckedInAt) { %>
+      <span class="stat-sub">at <%= stats.todayCheckedInAt %></span>
+    <% } %>
+  </div>
+
+  <div class="stat-card">
+    <span class="material-symbols-outlined stat-icon" style="color: var(--primary);">beach_access</span>
+    <span class="stat-value"><%= stats.paidLeaveBalance %></span>
+    <span class="stat-label">Paid Leaves Left</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="material-symbols-outlined stat-icon" style="color: var(--secondary);">sick</span>
+    <span class="stat-value"><%= stats.sickLeaveBalance %></span>
+    <span class="stat-label">Sick Leaves Left</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="material-symbols-outlined stat-icon" style="color: var(--accent);">payments</span>
+    <span class="stat-value stat-value--small"><%= latestPayslipDisplay %></span>
+    <span class="stat-label">Last Net Salary</span>
+    <% if (stats.latestPayslipPeriod) { %>
+      <span class="stat-sub">Period <%= stats.latestPayslipPeriod %></span>
+    <% } %>
+  </div>
+</div>
+
+<!-- ── Quick actions ──────────────────────────────────── -->
+<div class="quick-actions">
+  <% if (stats.todayStatusType === 'absent') { %>
+    <form action="/attendance/check-in" method="POST" style="display: inline;">
+      <button type="submit" class="quick-action" style="border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-family: inherit;">
+        <span class="material-symbols-outlined">play_arrow</span>
+        Check In
+      </button>
+    </form>
+  <% } else if (!recentLogs[0] || !recentLogs[0].check_out) { %>
+    <form action="/attendance/check-out" method="POST" style="display: inline;">
+      <button type="submit" class="quick-action" style="border: 1px solid var(--danger); color: var(--danger); cursor: pointer; font-family: inherit;">
+        <span class="material-symbols-outlined">stop</span>
+        Check Out
+      </button>
+    </form>
+  <% } %>
+
+  <a href="/attendance/dashboard#apply-leave" class="quick-action">
+    <span class="material-symbols-outlined">flight_takeoff</span>
+    Apply for Leave
+  </a>
+  <a href="/payroll/dashboard" class="quick-action">
+    <span class="material-symbols-outlined">receipt_long</span>
+    View Payslips
+  </a>
+  <% if (stats.latestPayslipId) { %>
+    <a href="/payroll/payslip/<%= stats.latestPayslipId %>" class="quick-action">
+      <span class="material-symbols-outlined">description</span>
+      Latest Payslip
+    </a>
+  <% } %>
+</div>
+
+<!-- ── Two-column layout: Activity + Summary ─────────── -->
+<div class="dashboard-grid">
+
+  <!-- Recent attendance -->
+  <div class="card">
+    <div class="chart-header" style="border: none; margin-bottom: 1rem;">
+      <span class="material-symbols-outlined">history</span>
+      <h3 style="margin: 0;">Recent Attendance</h3>
+    </div>
+    <% if (recentLogs && recentLogs.length > 0) { %>
+      <ul class="activity-list">
+        <% recentLogs.forEach(log => { %>
+          <li class="activity-item">
+            <span class="activity-icon">
+              <% if (log.status === 'present') { %>
+                <span class="material-symbols-outlined">check_circle</span>
+              <% } else if (log.status === 'absent') { %>
+                <span class="material-symbols-outlined">cancel</span>
+              <% } else { %>
+                <span class="material-symbols-outlined">flight_takeoff</span>
+              <% } %>
+            </span>
+            <div class="activity-text">
+              <strong>
+                <%= new Date(log.work_date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }) %>
+              </strong>
+              <div class="activity-sub">
+                <%= log.check_in ? new Date(log.check_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—' %>
+                &nbsp;→&nbsp;
+                <%= log.check_out ? new Date(log.check_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—' %>
+              </div>
+            </div>
+            <span style="text-transform: capitalize; font-size: 0.8rem; font-weight: 600; color: <%= log.status === 'present' ? 'var(--accent)' : log.status === 'absent' ? 'var(--danger)' : 'var(--primary)' %>">
+              <%= log.status %>
+            </span>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p class="empty-row">No attendance records yet. Check in to get started!</p>
+    <% } %>
+  </div>
+
+  <!-- Recent leave requests + month summary -->
+  <div class="card">
+    <div class="chart-header" style="border: none; margin-bottom: 1rem;">
+      <span class="material-symbols-outlined">flight_takeoff</span>
+      <h3 style="margin: 0;">Recent Leave Requests</h3>
+    </div>
+    <% if (recentLeaves && recentLeaves.length > 0) { %>
+      <ul class="activity-list">
+        <% recentLeaves.forEach(l => { %>
+          <li class="activity-item">
+            <span class="activity-icon">
+              <span class="material-symbols-outlined">
+                <% if (l.status === 'Approved') { %>check_circle<% }
+                   else if (l.status === 'Rejected') { %>cancel<% }
+                   else { %>hourglass_empty<% } %>
+              </span>
+            </span>
+            <div class="activity-text">
+              <strong><%= l.leave_type %> Leave</strong>
+              <div class="activity-sub">
+                <%= new Date(l.start_date).toLocaleDateString() %> – <%= new Date(l.end_date).toLocaleDateString() %>
+              </div>
+            </div>
+            <span style="font-size: 0.78rem; font-weight: 600; color: <%= l.status === 'Approved' ? 'var(--accent)' : l.status === 'Rejected' ? 'var(--danger)' : 'var(--secondary)' %>">
+              <%= l.status %>
+            </span>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p class="empty-row">No leave requests on file.</p>
+    <% } %>
+
+    <!-- Month summary strip -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
+      <div style="text-align: center;">
+        <div style="font-size: 1.4rem; font-weight: 700; color: var(--primary);"><%= stats.monthLeaveDays %></div>
+        <div style="font-size: 0.72rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em;">Leave days this month</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 1.4rem; font-weight: 700; color: var(--secondary);"><%= stats.pendingLeaves %></div>
+        <div style="font-size: 0.72rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em;">Pending requests</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

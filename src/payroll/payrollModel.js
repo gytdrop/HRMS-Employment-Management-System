@@ -4,7 +4,7 @@ module.exports = {
   // Get salary structure for a specific employee
   getStructureByEmployeeId: async (employeeId) => {
     const query = `
-      SELECT s.*, e.first_name, e.last_name, e.login_id 
+      SELECT s.*, e.first_name, e.last_name, e.login_id, e.email 
       FROM salary_structures s
       JOIN employees e ON s.employee_id = e.id
       WHERE s.employee_id = $1

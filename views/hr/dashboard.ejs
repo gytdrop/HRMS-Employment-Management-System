@@ -6,17 +6,11 @@
 </div>
 
 <% if (error) { %>
-  <div style="background-color: #fbebeb; color: var(--danger); border: 1px solid #f6d1d1; border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1.5rem; display: flex; align-items: center;">
-    <span class="material-symbols-outlined" style="margin-right: 8px; font-size: 20px;">error</span>
-    <%- error %>
-  </div>
+  <script>window.addEventListener('DOMContentLoaded', function () { showToast(<%- JSON.stringify(error) %>, 'error'); });</script>
 <% } %>
 
 <% if (success) { %>
-  <div style="background-color: #eaf2eb; color: var(--accent); border: 1px solid #d2e4d5; border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
-    <span class="material-symbols-outlined" style="flex-shrink:0; font-size: 20px;">mark_email_read</span>
-    <span><%- success %></span>
-  </div>
+  <script>window.addEventListener('DOMContentLoaded', function () { showToast(<%- JSON.stringify(success) %>, 'success'); });</script>
 <% } %>
 
 <div style="display: grid; grid-template-columns: 320px 1fr; gap: 2rem; align-items: start;">
