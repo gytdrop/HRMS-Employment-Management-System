@@ -1,0 +1,111 @@
+<%- include('../layouts/header') %>
+
+<div style="margin-bottom: 2rem;" class="no-print">
+  <a href="/payroll/dashboard" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 4px; padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-bottom: 1rem;">
+    <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span> Back to Payroll
+  </a>
+  <button onclick="window.print()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; float: right;">
+    <span class="material-symbols-outlined">print</span> Print Payslip
+  </button>
+  <h1>Monthly Payslip</h1>
+  <p>Official statement of earnings for period <%= payslip.pay_period %></p>
+</div>
+
+<div class="card" id="payslip-print-area" style="max-width: 800px; margin: 0 auto; padding: 3rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: white; box-shadow: var(--shadow-md);">
+  <!-- Payslip Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary); padding-bottom: 1.5rem; margin-bottom: 2rem;">
+    <div>
+      <h1 style="color: var(--primary); font-size: 2.25rem; font-weight: 700; margin-bottom: 0.25rem; letter-spacing: -1px;">HRMS Solutions</h1>
+      <span style="font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px;">Corporate Headquarters</span>
+    </div>
+    <div style="text-align: right;">
+      <h2 style="font-weight: 600; margin-bottom: 0.25rem; font-size: 1.25rem;">PAY SLIP</h2>
+      <span style="font-size: 0.9rem; color: var(--text-secondary);">Period: <strong><%= payslip.pay_period %></strong></span>
+    </div>
+  </div>
+
+  <!-- Employee & Payslip Meta Info -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem; font-size: 0.95rem;">
+    <div>
+      <h4 style="color: var(--text-light); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Employee Details</h4>
+      <div style="margin-bottom: 0.25rem;"><strong style="font-size: 1.1rem; color: var(--text-primary);"><%= payslip.first_name %> <%= payslip.last_name %></strong></div>
+      <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Login ID: <code><%= payslip.login_id %></code></div>
+      <div style="color: var(--text-secondary);">Email: <%= payslip.email %></div>
+    </div>
+    <div style="text-align: right;">
+      <h4 style="color: var(--text-light); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Payment Reference</h4>
+      <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Slip Ref ID: #PS-<%= String(payslip.id).padStart(5, '0') %></div>
+      <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Issued On: <%= new Date(payslip.created_at).toLocaleDateString() %></div>
+      <div style="color: var(--text-secondary);">Status: <span style="color: var(--accent); font-weight: 600;">PAID</span></div>
+    </div>
+  </div>
+
+  <!-- Component Table -->
+  <div class="table-container" style="border-radius: var(--radius-sm); margin-bottom: 2rem;">
+    <table>
+      <thead>
+        <tr>
+          <th>Earnings Component Description</th>
+          <th style="text-align: right;">Percentage/Rule</th>
+          <th style="text-align: right;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Basic Salary</strong></td>
+          <td style="text-align: right; color: var(--text-secondary);">50.00% of Base Wage</td>
+          <td style="text-align: right; font-weight: 500;">$<%= parseFloat(payslip.basic_salary).toFixed(2) %></td>
+        </tr>
+        <tr>
+          <td><strong>House Rent Allowance (HRA)</strong></td>
+          <td style="text-align: right; color: var(--text-secondary);">50.00% of Basic (25.00% of Base)</td>
+          <td style="text-align: right; font-weight: 500;">$<%= parseFloat(payslip.hra).toFixed(2) %></td>
+        </tr>
+        <tr>
+          <td><strong>Other Allowances</strong></td>
+          <td style="text-align: right; color: var(--text-secondary);">Custom approved allowance</td>
+          <td style="text-align: right; font-weight: 500;">$<%= parseFloat(payslip.other_allowances).toFixed(2) %></td>
+        </tr>
+        <tr style="border-top: 1px solid var(--border-color); font-weight: 600; font-size: 1.05rem;">
+          <td>Total Net Earnings Sum</td>
+          <td style="text-align: right; color: var(--text-light); font-weight: 400;">Sum of components</td>
+          <td style="text-align: right; color: var(--accent); font-size: 1.15rem;">$<%= parseFloat(payslip.net_salary).toFixed(2) %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Note/Signature -->
+  <div style="margin-top: 4rem; display: flex; justify-content: space-between; align-items: flex-end; font-size: 0.85rem; color: var(--text-secondary);">
+    <div>
+      <p style="font-style: italic; margin-bottom: 0;">This is a system-generated document and requires no physical signature.</p>
+    </div>
+    <div style="text-align: center; width: 200px; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+      <strong>HR Officer Signature</strong>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media print {
+    body {
+      background-color: white !important;
+      color: black !important;
+    }
+    .sidebar, .no-print, header, footer {
+      display: none !important;
+    }
+    .main-content {
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+    #payslip-print-area {
+      box-shadow: none !important;
+      border: none !important;
+      padding: 0 !important;
+      max-width: 100% !important;
+    }
+  }
+</style>
+
+<%- include('../layouts/footer') %>
