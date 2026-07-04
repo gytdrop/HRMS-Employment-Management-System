@@ -302,11 +302,13 @@
     <% } %>
   </div>
 
-  <% if (user.role === 'admin' && structures && structures.length > 0) {
-    const _totalWage  = structures.reduce((s,r) => s + parseFloat(r.base_wage || 0), 0);
-    const _totalNet   = structures.reduce((s,r) => s + parseFloat(r.basic_salary||0) + parseFloat(r.hra||0) + parseFloat(r.other_allowances||0), 0);
-    const _configured = structures.filter(r => parseFloat(r.base_wage) > 0).length;
+  <%
+    const _showHeroStats = user.role === 'admin' && structures && structures.length > 0;
+    const _totalWage  = _showHeroStats ? structures.reduce((s,r) => s + parseFloat(r.base_wage || 0), 0) : 0;
+    const _totalNet   = _showHeroStats ? structures.reduce((s,r) => s + parseFloat(r.basic_salary||0) + parseFloat(r.hra||0) + parseFloat(r.other_allowances||0), 0) : 0;
+    const _configured = _showHeroStats ? structures.filter(r => parseFloat(r.base_wage) > 0).length : 0;
   %>
+  <% if (_showHeroStats) { %>
   <div class="hero-stats">
     <div class="hero-stat">
       <span class="material-symbols-outlined">groups</span>
