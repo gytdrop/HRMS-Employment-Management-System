@@ -5,13 +5,29 @@
   const payrollDisplay = '₹' + (stats.payrollTotal || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
 %>
 
-<!-- ── Page hero ──────────────────────────────────────── -->
-<div style="margin-bottom: 1.75rem;">
+<!-- ── Page hero ────────────────────────────────────────── -->
+<div class="page-hero">
   <h1>Admin Dashboard</h1>
-  <p>Org-wide overview of attendance, leave, and payroll health.</p>
+  <p style="margin:0; font-size:0.85rem;">Org-wide overview — attendance, leave & payroll health.</p>
 </div>
 
-<!-- ── Stat cards ─────────────────────────────────────── -->
+<!-- ── Action Strip (compact FAB row) ───────────────────── -->
+<div class="action-strip">
+  <a href="/hr/dashboard" class="action-chip">
+    <span class="material-symbols-outlined">person_add</span>
+    Onboard Employee
+  </a>
+  <a href="/payroll/dashboard" class="action-chip">
+    <span class="material-symbols-outlined">edit_note</span>
+    Manage Salaries
+  </a>
+  <a href="/attendance/admin-review" class="action-chip <% if (stats.pendingLeaves > 0) { %>action-chip--danger<% } %>">
+    <span class="material-symbols-outlined">rule</span>
+    Review Leaves<% if (stats.pendingLeaves > 0) { %>&nbsp;<strong>(<%= stats.pendingLeaves %>)</strong><% } %>
+  </a>
+</div>
+
+<!-- ── Stat cards ───────────────────────────────────────── -->
 <div class="stat-strip">
   <div class="stat-card">
     <span class="material-symbols-outlined stat-icon">groups</span>
@@ -28,9 +44,9 @@
   <div class="stat-card">
     <span class="material-symbols-outlined stat-icon" style="color: var(--danger);">pending_actions</span>
     <span class="stat-value"><%= stats.pendingLeaves %></span>
-    <span class="stat-label">Pending Leave Requests</span>
+    <span class="stat-label">Pending Requests</span>
     <% if (stats.pendingLeaves > 0) { %>
-      <a href="/attendance/admin-review" class="stat-sub" style="color: var(--danger); text-decoration: none; font-weight: 600;">Review now →</a>
+      <a href="/attendance/admin-review" class="stat-sub" style="color:var(--danger);text-decoration:none;font-weight:600;">Review now →</a>
     <% } %>
   </div>
 
@@ -41,30 +57,14 @@
   </div>
 </div>
 
-<!-- ── Quick actions ──────────────────────────────────── -->
-<div class="quick-actions">
-  <a href="/hr/dashboard" class="quick-action">
-    <span class="material-symbols-outlined">person_add</span>
-    Onboard Employee
-  </a>
-  <a href="/payroll/dashboard" class="quick-action">
-    <span class="material-symbols-outlined">edit_note</span>
-    Manage Salaries
-  </a>
-  <a href="/attendance/admin-review" class="quick-action">
-    <span class="material-symbols-outlined">rule</span>
-    Review Leave Requests
-  </a>
-</div>
-
-<!-- ── Charts grid ────────────────────────────────────── -->
+<!-- ── Charts grid ──────────────────────────────────────── -->
 <div class="dashboard-grid">
   <div class="chart-card">
     <div class="chart-header">
       <span class="material-symbols-outlined">show_chart</span>
       <h3>Attendance Trend (6 months)</h3>
     </div>
-    <div id="attendance-trend-chart" style="min-height: 280px;"></div>
+    <div id="attendance-trend-chart" style="min-height:260px;"></div>
   </div>
 
   <div class="chart-card">
@@ -72,18 +72,18 @@
       <span class="material-symbols-outlined">donut_large</span>
       <h3>Leave Distribution</h3>
     </div>
-    <div id="leave-distribution-chart" style="min-height: 280px;"></div>
+    <div id="leave-distribution-chart" style="min-height:260px;"></div>
   </div>
 </div>
 
-<!-- ── Recent leave requests ──────────────────────────── -->
+<!-- ── Recent leave requests ────────────────────────────── -->
 <div class="card">
-  <div class="chart-header" style="border: none; margin-bottom: 1rem;">
+  <div class="chart-header" style="border:none; margin-bottom:0.85rem;">
     <span class="material-symbols-outlined">inbox</span>
-    <h3 style="margin: 0;">Latest Pending Leave Requests</h3>
+    <h3 style="margin:0;">Latest Pending Leave Requests</h3>
   </div>
   <% if (recentLeaves && recentLeaves.length > 0) { %>
-    <div class="table-container" style="margin-bottom: 0;">
+    <div class="table-container" style="margin-bottom:0;">
       <table>
         <thead>
           <tr>
@@ -98,13 +98,13 @@
             <tr>
               <td>
                 <strong><%= l.first_name %> <%= l.last_name %></strong>
-                <div style="font-size: 0.75rem; color: var(--text-light);"><%= l.login_id %></div>
+                <div style="font-size:0.72rem;color:var(--text-light);"><%= l.login_id %></div>
               </td>
               <td><strong><%= l.leave_type %></strong></td>
-              <td style="font-size: 0.85rem;">
+              <td style="font-size:0.82rem;white-space:nowrap;">
                 <%= new Date(l.start_date).toLocaleDateString() %> – <%= new Date(l.end_date).toLocaleDateString() %>
               </td>
-              <td style="font-size: 0.85rem; color: var(--text-secondary); max-width: 300px; white-space: normal; word-break: break-word;">
+              <td style="font-size:0.82rem;color:var(--text-secondary);max-width:280px;white-space:normal;word-break:break-word;">
                 <%= l.reason %>
               </td>
             </tr>
@@ -113,74 +113,73 @@
       </table>
     </div>
   <% } else { %>
-    <p class="empty-row">
-      <span class="material-symbols-outlined" style="font-size: 36px; display: block; margin-bottom: 0.5rem; color: var(--text-light);">check_circle</span>
-      No pending leave requests. You're all caught up!
-    </p>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <span class="material-symbols-outlined">check_circle</span>
+      </div>
+      <div class="empty-title">All caught up!</div>
+      <p class="empty-desc">There are no pending leave requests right now.</p>
+    </div>
   <% } %>
 </div>
 
-<!-- ── ApexCharts init ────────────────────────────────── -->
+<!-- ── ApexCharts init ──────────────────────────────────── -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     if (typeof ApexCharts === 'undefined') {
-      console.warn('ApexCharts not loaded yet — charts will be skipped.');
+      console.warn('ApexCharts not loaded — charts skipped.');
       return;
     }
 
-    // Read CSS variable values for chart theming
-    const root = getComputedStyle(document.documentElement);
-    const primary = root.getPropertyValue('--primary').trim();
-    const accent  = root.getPropertyValue('--accent').trim();
-    const danger  = root.getPropertyValue('--danger').trim();
-    const secondary = root.getPropertyValue('--secondary').trim();
+    const root        = getComputedStyle(document.documentElement);
+    const primary     = root.getPropertyValue('--primary').trim();
+    const accent      = root.getPropertyValue('--accent').trim();
+    const danger      = root.getPropertyValue('--danger').trim();
+    const secondary   = root.getPropertyValue('--secondary').trim();
     const textSecondary = root.getPropertyValue('--text-secondary').trim();
-    const textLight  = root.getPropertyValue('--text-light').trim();
+    const textLight   = root.getPropertyValue('--text-light').trim();
     const borderColor = root.getPropertyValue('--border-color').trim();
 
     const trendData = <%- JSON.stringify(attendanceTrend || []) %>;
     const distData  = <%- JSON.stringify(leaveDistribution || { paid: 0, sick: 0, unpaid: 0 }) %>;
 
-    // ── Attendance trend (line) ─────────────────────────
+    // ── Attendance trend (area line) ──────────────────────
     const trendEl = document.getElementById('attendance-trend-chart');
     if (trendEl) {
-      const months = trendData.map(r => r.month);
       new ApexCharts(trendEl, {
         chart: {
-          type: 'line',
-          height: 280,
+          type: 'area',
+          height: 260,
           toolbar: { show: false },
           fontFamily: 'Outfit, sans-serif',
-          animations: { enabled: true, speed: 500 }
+          animations: { enabled: true, speed: 600, animateGradually: { enabled: true, delay: 80 } }
         },
         series: [
           { name: 'Present', data: trendData.map(r => parseInt(r.present, 10) || 0) },
-          { name: 'Absent',  data: trendData.map(r => parseInt(r.absent, 10) || 0) },
-          { name: 'Leave',   data: trendData.map(r => parseInt(r.leave, 10) || 0) }
+          { name: 'Absent',  data: trendData.map(r => parseInt(r.absent,  10) || 0) },
+          { name: 'Leave',   data: trendData.map(r => parseInt(r.leave,   10) || 0) }
         ],
         colors: [accent, danger, primary],
-        stroke: { width: 3, curve: 'smooth' },
-        markers: { size: 4, strokeWidth: 2, hover: { size: 6 } },
+        fill: {
+          type: 'gradient',
+          gradient: { opacityFrom: 0.3, opacityTo: 0.05, shadeIntensity: 0 }
+        },
+        stroke: { width: 2.5, curve: 'smooth' },
+        markers: { size: 3.5, strokeWidth: 2, hover: { size: 5 } },
         xaxis: {
-          categories: months,
-          labels: { style: { colors: textLight, fontSize: '12px' } },
+          categories: trendData.map(r => r.month),
+          labels: { style: { colors: textLight, fontSize: '11px' } },
           axisBorder: { color: borderColor },
           axisTicks:  { color: borderColor }
         },
-        yaxis: {
-          labels: { style: { colors: textLight, fontSize: '12px' } }
-        },
-        grid: { borderColor: borderColor, strokeDashArray: 4 },
-        legend: {
-          position: 'top',
-          horizontalAlign: 'right',
-          labels: { colors: textSecondary }
-        },
+        yaxis: { labels: { style: { colors: textLight, fontSize: '11px' } } },
+        grid: { borderColor: borderColor, strokeDashArray: 4, padding: { left: 0, right: 0 } },
+        legend: { position: 'top', horizontalAlign: 'right', labels: { colors: textSecondary }, fontSize: '12px' },
         tooltip: { theme: 'light' }
       }).render();
     }
 
-    // ── Leave distribution (doughnut) ───────────────────
+    // ── Leave distribution (doughnut) ─────────────────────
     const distEl = document.getElementById('leave-distribution-chart');
     if (distEl) {
       const paid   = distData.paid   || 0;
@@ -189,19 +188,12 @@
       const total  = paid + sick + unpaid;
 
       new ApexCharts(distEl, {
-        chart: {
-          type: 'donut',
-          height: 280,
-          fontFamily: 'Outfit, sans-serif'
-        },
+        chart: { type: 'donut', height: 260, fontFamily: 'Outfit, sans-serif' },
         series: total > 0 ? [paid, sick, unpaid] : [1],
-        labels: total > 0 ? ['Paid', 'Sick', 'Unpaid'] : ['No data'],
-        colors: total > 0 ? [accent, secondary, primary] : [borderColor],
-        legend: {
-          position: 'bottom',
-          labels: { colors: textSecondary }
-        },
-        dataLabels: { style: { fontSize: '13px', fontWeight: 600 } },
+        labels:  total > 0 ? ['Paid', 'Sick', 'Unpaid'] : ['No data'],
+        colors:  total > 0 ? [accent, secondary, primary] : [borderColor],
+        legend: { position: 'bottom', labels: { colors: textSecondary }, fontSize: '12px' },
+        dataLabels: { style: { fontSize: '12px', fontWeight: 600 } },
         plotOptions: {
           pie: {
             donut: {
@@ -210,22 +202,16 @@
                 show: true,
                 total: {
                   show: true,
-                  label: total > 0 ? 'Total Approved' : 'No leaves',
+                  label: total > 0 ? 'Total' : 'No leaves',
                   color: textSecondary,
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: 600
                 }
               }
             }
           }
         },
-        tooltip: {
-          y: {
-            formatter: function (val) {
-              return val + ' request' + (val === 1 ? '' : 's');
-            }
-          }
-        }
+        tooltip: { y: { formatter: v => v + ' request' + (v === 1 ? '' : 's') } }
       }).render();
     }
   });

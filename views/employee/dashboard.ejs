@@ -7,19 +7,53 @@
     : '—';
 %>
 
-<!-- ── Page hero ──────────────────────────────────────── -->
-<div style="margin-bottom: 1.75rem;">
+<!-- ── Page hero ────────────────────────────────────────── -->
+<div class="page-hero">
   <h1>My Dashboard</h1>
-  <p>Your day-at-a-glance: attendance, leave, and the latest pay.</p>
+  <p style="margin:0; font-size:0.85rem;">Your day at a glance — attendance, leave & latest pay.</p>
 </div>
 
-<!-- ── Stat cards ─────────────────────────────────────── -->
+<!-- ── Action Strip ─────────────────────────────────────── -->
+<div class="action-strip">
+  <% if (stats.todayStatusType === 'absent') { %>
+    <form action="/attendance/check-in" method="POST" style="display:inline;">
+      <button type="submit" class="action-chip action-chip--accent" style="cursor:pointer;">
+        <span class="material-symbols-outlined">play_arrow</span>
+        Check In
+      </button>
+    </form>
+  <% } else if (!recentLogs[0] || !recentLogs[0].check_out) { %>
+    <form action="/attendance/check-out" method="POST" style="display:inline;">
+      <button type="submit" class="action-chip action-chip--danger" style="cursor:pointer;">
+        <span class="material-symbols-outlined">stop</span>
+        Check Out
+      </button>
+    </form>
+  <% } %>
+
+  <a href="/attendance/dashboard#apply-leave" class="action-chip">
+    <span class="material-symbols-outlined">flight_takeoff</span>
+    Apply for Leave
+  </a>
+  <a href="/payroll/dashboard" class="action-chip">
+    <span class="material-symbols-outlined">receipt_long</span>
+    View Payslips
+  </a>
+  <% if (stats.latestPayslipId) { %>
+    <a href="/payroll/payslip/<%= stats.latestPayslipId %>" class="action-chip">
+      <span class="material-symbols-outlined">description</span>
+      Latest Payslip
+    </a>
+  <% } %>
+</div>
+
+<!-- ── Stat cards ───────────────────────────────────────── -->
 <div class="stat-strip">
   <div class="stat-card">
     <% if (stats.todayStatusType === 'present') { %>
-      <span class="material-symbols-outlined stat-icon" style="color: var(--accent);">check_circle</span>
+      <span class="material-symbols-outlined stat-icon" style="color:var(--accent);">check_circle</span>
     <% } else { %>
-      <span class="material-symbols-outlined stat-icon" style="color: var(--secondary);">schedule</span>
+      <span class="material-symbols-outlined stat-icon" style="color:var(--secondary);">schedule</span>
     <% } %>
     <span class="stat-value"><%= stats.todayStatus %></span>
     <span class="stat-label">Today's Status</span>
@@ -29,19 +63,19 @@
   </div>
 
   <div class="stat-card">
-    <span class="material-symbols-outlined stat-icon" style="color: var(--primary);">beach_access</span>
+    <span class="material-symbols-outlined stat-icon" style="color:var(--primary);">beach_access</span>
     <span class="stat-value"><%= stats.paidLeaveBalance %></span>
     <span class="stat-label">Paid Leaves Left</span>
   </div>
 
   <div class="stat-card">
-    <span class="material-symbols-outlined stat-icon" style="color: var(--secondary);">sick</span>
+    <span class="material-symbols-outlined stat-icon" style="color:var(--secondary);">sick</span>
     <span class="stat-value"><%= stats.sickLeaveBalance %></span>
     <span class="stat-label">Sick Leaves Left</span>
   </div>
 
   <div class="stat-card">
-    <span class="material-symbols-outlined stat-icon" style="color: var(--accent);">payments</span>
+    <span class="material-symbols-outlined stat-icon" style="color:var(--accent);">payments</span>
     <span class="stat-value stat-value--small"><%= latestPayslipDisplay %></span>
     <span class="stat-label">Last Net Salary</span>
     <% if (stats.latestPayslipPeriod) { %>
@@ -50,54 +84,20 @@
   </div>
 </div>
 
-<!-- ── Quick actions ──────────────────────────────────── -->
-<div class="quick-actions">
-  <% if (stats.todayStatusType === 'absent') { %>
-    <form action="/attendance/check-in" method="POST" style="display: inline;">
-      <button type="submit" class="quick-action" style="border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-family: inherit;">
-        <span class="material-symbols-outlined">play_arrow</span>
-        Check In
-      </button>
-    </form>
-  <% } else if (!recentLogs[0] || !recentLogs[0].check_out) { %>
-    <form action="/attendance/check-out" method="POST" style="display: inline;">
-      <button type="submit" class="quick-action" style="border: 1px solid var(--danger); color: var(--danger); cursor: pointer; font-family: inherit;">
-        <span class="material-symbols-outlined">stop</span>
-        Check Out
-      </button>
-    </form>
-  <% } %>
-
-  <a href="/attendance/dashboard#apply-leave" class="quick-action">
-    <span class="material-symbols-outlined">flight_takeoff</span>
-    Apply for Leave
-  </a>
-  <a href="/payroll/dashboard" class="quick-action">
-    <span class="material-symbols-outlined">receipt_long</span>
-    View Payslips
-  </a>
-  <% if (stats.latestPayslipId) { %>
-    <a href="/payroll/payslip/<%= stats.latestPayslipId %>" class="quick-action">
-      <span class="material-symbols-outlined">description</span>
-      Latest Payslip
-    </a>
-  <% } %>
-</div>
-
-<!-- ── Two-column layout: Activity + Summary ─────────── -->
+<!-- ── Two-column layout ─────────────────────────────────── -->
 <div class="dashboard-grid">
 
   <!-- Recent attendance -->
   <div class="card">
-    <div class="chart-header" style="border: none; margin-bottom: 1rem;">
+    <div class="chart-header" style="border:none; margin-bottom:0.85rem;">
       <span class="material-symbols-outlined">history</span>
-      <h3 style="margin: 0;">Recent Attendance</h3>
+      <h3 style="margin:0;">Recent Attendance</h3>
     </div>
     <% if (recentLogs && recentLogs.length > 0) { %>
       <ul class="activity-list">
         <% recentLogs.forEach(log => { %>
           <li class="activity-item">
-            <span class="activity-icon">
+            <span class="activity-icon" style="color:<%= log.status === 'present' ? 'var(--accent)' : log.status === 'absent' ? 'var(--danger)' : 'var(--primary)' %>;">
               <% if (log.status === 'present') { %>
                 <span class="material-symbols-outlined">check_circle</span>
               <% } else if (log.status === 'absent') { %>
@@ -107,41 +107,51 @@
               <% } %>
             </span>
             <div class="activity-text">
-              <strong>
-                <%= new Date(log.work_date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }) %>
-              </strong>
+              <strong><%= new Date(log.work_date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }) %></strong>
               <div class="activity-sub">
-                <%= log.check_in ? new Date(log.check_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—' %>
+                <%= log.check_in  ? new Date(log.check_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—' %>
                 &nbsp;→&nbsp;
                 <%= log.check_out ? new Date(log.check_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—' %>
               </div>
             </div>
-            <span style="text-transform: capitalize; font-size: 0.8rem; font-weight: 600; color: <%= log.status === 'present' ? 'var(--accent)' : log.status === 'absent' ? 'var(--danger)' : 'var(--primary)' %>">
+            <span style="text-transform:capitalize;font-size:0.75rem;font-weight:600;color:<%= log.status === 'present' ? 'var(--accent)' : log.status === 'absent' ? 'var(--danger)' : 'var(--primary)' %>">
               <%= log.status %>
             </span>
           </li>
         <% }) %>
       </ul>
     <% } else { %>
-      <p class="empty-row">No attendance records yet. Check in to get started!</p>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <span class="material-symbols-outlined">event_busy</span>
+        </div>
+        <div class="empty-title">No records yet</div>
+        <p class="empty-desc">Check in to start tracking your attendance.</p>
+        <% if (stats.todayStatusType === 'absent') { %>
+          <form action="/attendance/check-in" method="POST">
+            <button type="submit" class="empty-action" style="cursor:pointer;border:none;background:transparent;">
+              <span class="material-symbols-outlined" style="font-size:14px;">play_arrow</span>
+              Check In Now
+            </button>
+          </form>
+        <% } %>
+      </div>
     <% } %>
   </div>
 
   <!-- Recent leave requests + month summary -->
   <div class="card">
-    <div class="chart-header" style="border: none; margin-bottom: 1rem;">
+    <div class="chart-header" style="border:none; margin-bottom:0.85rem;">
       <span class="material-symbols-outlined">flight_takeoff</span>
-      <h3 style="margin: 0;">Recent Leave Requests</h3>
+      <h3 style="margin:0;">Recent Leave Requests</h3>
     </div>
     <% if (recentLeaves && recentLeaves.length > 0) { %>
       <ul class="activity-list">
         <% recentLeaves.forEach(l => { %>
           <li class="activity-item">
-            <span class="activity-icon">
+            <span class="activity-icon" style="color:<%= l.status === 'Approved' ? 'var(--accent)' : l.status === 'Rejected' ? 'var(--danger)' : 'var(--secondary)' %>;">
               <span class="material-symbols-outlined">
-                <% if (l.status === 'Approved') { %>check_circle<% }
-                   else if (l.status === 'Rejected') { %>cancel<% }
-                   else { %>hourglass_empty<% } %>
+                <% if (l.status === 'Approved') { %>check_circle<% } else if (l.status === 'Rejected') { %>cancel<% } else { %>hourglass_empty<% } %>
               </span>
             </span>
             <div class="activity-text">
@@ -150,25 +160,35 @@
                 <%= new Date(l.start_date).toLocaleDateString() %> – <%= new Date(l.end_date).toLocaleDateString() %>
               </div>
             </div>
-            <span style="font-size: 0.78rem; font-weight: 600; color: <%= l.status === 'Approved' ? 'var(--accent)' : l.status === 'Rejected' ? 'var(--danger)' : 'var(--secondary)' %>">
+            <span style="font-size:0.72rem;font-weight:600;color:<%= l.status === 'Approved' ? 'var(--accent)' : l.status === 'Rejected' ? 'var(--danger)' : 'var(--secondary)' %>">
               <%= l.status %>
             </span>
           </li>
         <% }) %>
       </ul>
     <% } else { %>
-      <p class="empty-row">No leave requests on file.</p>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <span class="material-symbols-outlined">beach_access</span>
+        </div>
+        <div class="empty-title">No leave requests</div>
+        <p class="empty-desc">Need time off? Apply for leave anytime.</p>
+        <a href="/attendance/dashboard#apply-leave" class="empty-action">
+          <span class="material-symbols-outlined" style="font-size:14px;">add</span>
+          Apply for Leave
+        </a>
+      </div>
     <% } %>
 
-    <!-- Month summary strip -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
-      <div style="text-align: center;">
-        <div style="font-size: 1.4rem; font-weight: 700; color: var(--primary);"><%= stats.monthLeaveDays %></div>
-        <div style="font-size: 0.72rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em;">Leave days this month</div>
+    <!-- Month summary mini-strip -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:1.1rem;padding-top:1.1rem;border-top:1px solid var(--border-color);">
+      <div style="text-align:center;">
+        <div style="font-size:1.35rem;font-weight:700;color:var(--primary);"><%= stats.monthLeaveDays %></div>
+        <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;">Leave days this month</div>
       </div>
-      <div style="text-align: center;">
-        <div style="font-size: 1.4rem; font-weight: 700; color: var(--secondary);"><%= stats.pendingLeaves %></div>
-        <div style="font-size: 0.72rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em;">Pending requests</div>
+      <div style="text-align:center;">
+        <div style="font-size:1.35rem;font-weight:700;color:var(--secondary);"><%= stats.pendingLeaves %></div>
+        <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;">Pending requests</div>
       </div>
     </div>
   </div>

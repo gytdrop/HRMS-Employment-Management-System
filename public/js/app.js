@@ -1,17 +1,17 @@
-/* HRMS global UI: dark mode, toasts, sidebar, loading states */
+/* HRMS global UI: dark mode · toasts · sidebar · loading states · micro-animations */
 
 (function () {
   'use strict';
 
   const THEME_KEY = 'hrms-theme';
 
-  /* ── Theme (dark mode) ───────────────────────────── */
+  /* ── Theme (dark mode) ───────────────────────────────── */
   function getStoredTheme() {
     try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
   }
 
-  function setStoredTheme(value) {
-    try { localStorage.setItem(THEME_KEY, value); } catch (e) { /* ignore */ }
+  function setStoredTheme(v) {
+    try { localStorage.setItem(THEME_KEY, v); } catch (e) { /* ignore */ }
   }
 
   function applyTheme(theme) {
@@ -21,25 +21,18 @@
     } else {
       root.removeAttribute('data-theme');
     }
-    // Update toggle button icon if present
     const btn = document.getElementById('theme-toggle');
     if (btn) {
       const icon = btn.querySelector('.material-symbols-outlined');
-      if (icon) {
-        icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
-      }
-      btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      if (icon) icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+      btn.setAttribute('aria-label',
+        theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
     }
   }
 
   function initTheme() {
-    // Apply stored theme on first load (before paint would be ideal; defer is acceptable)
     const stored = getStoredTheme();
-    if (stored === 'dark') {
-      applyTheme('dark');
-    } else {
-      applyTheme('light');
-    }
+    applyTheme(stored === 'dark' ? 'dark' : 'light');
 
     const btn = document.getElementById('theme-toggle');
     if (btn) {
@@ -52,7 +45,76 @@
     }
   }
 
-  /* ── Toasts ─────────────────────────────────────── */
+  /* ── Topbar: scroll-aware elevation ─────────────────── */
+  function initTopbarElevation() {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+
+    const mainContent = document.querySelector('.main-content');
+    const scrollTarget = mainContent || window;
+
+    function onScroll() {
+      const scrollY = mainContent ? mainContent.scrollTop : window.scrollY;
+      if (scrollY > 10) {
+        topbar.style.boxShadow = '0 4px 20px rgba(45,42,38,0.12)';
+      } else {
+        topbar.style.boxShadow = '';
+      }
+    }
+
+    scrollTarget.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  /* ── Number counter animation ───────────────────────── */
+  function animateCounter(el) {
+    const rawText = el.textContent.trim();
+
+    // Detect numeric: strip currency symbols and commas
+    const cleaned = rawText.replace(/[₹,\s]/g, '');
+    const num = parseFloat(cleaned);
+    if (isNaN(num) || rawText === '—') return;
+
+    const isRupee = rawText.includes('₹');
+    const duration = 900;
+    const start = performance.now();
+    const startVal = 0;
+
+    function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(startVal + eased * num);
+
+      if (isRupee) {
+        el.textContent = '₹' + current.toLocaleString('en-IN');
+      } else {
+        el.textContent = current;
+      }
+
+      if (progress < 1) requestAnimationFrame(tick);
+      else el.textContent = rawText; // restore original for accuracy
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  function initCounters() {
+    const observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          animateCounter(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('.stat-value').forEach(function (el) {
+      observer.observe(el);
+    });
+  }
+
+  /* ── Toasts ─────────────────────────────────────────── */
   function ensureToastContainer() {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -76,13 +138,12 @@
                    : type === 'error'   ? 'error'
                    : 'info';
 
-    // Allow inline HTML (some messages are formatted with <code> etc)
     const iconEl = document.createElement('span');
     iconEl.className = 'material-symbols-outlined';
     iconEl.textContent = iconName;
 
     const textEl = document.createElement('span');
-    if (/<[a-z][\s\S]*>/i.test(message)) {
+    if (/^<[a-z][\s\S]*>/i.test(message)) {
       textEl.innerHTML = message;
     } else {
       textEl.textContent = message;
@@ -101,10 +162,9 @@
     }, 4500);
   }
 
-  // Expose globally for inline use in views
   window.showToast = showToast;
 
-  /* ── Sidebar (mobile) ───────────────────────────── */
+  /* ── Sidebar (mobile) ───────────────────────────────── */
   function initSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const hamburger = document.getElementById('hamburger');
@@ -136,7 +196,6 @@
 
     backdrop.addEventListener('click', close);
 
-    // Close on link click (mobile UX)
     sidebar.querySelectorAll('a').forEach(function (a) {
       a.addEventListener('click', function () {
         if (window.innerWidth <= 768) close();
@@ -144,17 +203,15 @@
     });
   }
 
-  /* ── Loading states on form submit ──────────────── */
+  /* ── Loading states on form submit ──────────────────── */
   function initLoadingStates() {
     document.addEventListener('submit', function (e) {
       const form = e.target;
       if (!form || form.tagName !== 'FORM') return;
       const submitter = e.submitter;
       if (!submitter) return;
-      // Add spinner to the button if it has class .btn
       if (submitter.classList && submitter.classList.contains('btn')) {
         submitter.classList.add('is-loading');
-        // Add a spinner child if not present
         if (!submitter.querySelector('.spinner')) {
           const spinner = document.createElement('span');
           spinner.className = 'spinner';
@@ -164,7 +221,18 @@
     });
   }
 
-  /* ── Init on DOM ready ──────────────────────────── */
+  /* ── Action-chip form submit handling ────────────────── */
+  function initChipForms() {
+    // Chips inside forms get loading state too
+    document.querySelectorAll('form .action-chip').forEach(function (chip) {
+      chip.closest('form').addEventListener('submit', function () {
+        chip.style.opacity = '0.65';
+        chip.style.pointerEvents = 'none';
+      });
+    });
+  }
+
+  /* ── Init on DOM ready ───────────────────────────────── */
   function ready(fn) {
     if (document.readyState !== 'loading') fn();
     else document.addEventListener('DOMContentLoaded', fn);
@@ -172,7 +240,10 @@
 
   ready(function () {
     initTheme();
+    initTopbarElevation();
     initSidebar();
     initLoadingStates();
+    initCounters();
+    initChipForms();
   });
 })();
